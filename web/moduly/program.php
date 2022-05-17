@@ -25,8 +25,10 @@ if ($url->cast(1) === 'muj') {
 } else if (isset($dny[$url->cast(1)])) {
     $nastaveni['den'] = $dny[$url->cast(1)]->format('z');
 } else if (!$url->cast(1)) {
-    $nastaveni['den'] = reset($dny)->format('z');
-    $alternativniUrl = 'program/' . slugify(reset($dny)->format('l'));
+    $druhyDenWrapped = array_slice($dny, 1, 1);
+    $druhyDen = reset($druhyDenWrapped); // protože ve středu jsou jenom technické aktivity
+    $nastaveni['den'] = $druhyDen->format('z');
+    $alternativniUrl = 'program/' . slugify($druhyDen->format('l'));
 } else {
     throw new Nenalezeno();
 }
