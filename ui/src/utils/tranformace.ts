@@ -1,4 +1,4 @@
-import { Aktivita, Obsazenost } from "../api/program";
+import { Aktivita, Obsazenost } from "../api";
 import { TimeRange } from "../components/Timetable";
 import { containsSame } from ".";
 

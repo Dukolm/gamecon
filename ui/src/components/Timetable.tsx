@@ -3,13 +3,13 @@ import { distinct, range, zip } from "../utils";
 
 export type TimeRange = { from: number; to: number };
 
-export type Buňka = {
+export type Cell = {
   time: TimeRange;
   group: string;
   element: JSXElement;
 };
 
-export type StructureBuňka = {
+export type StructureCell = {
   span?: number;
   content?: JSXElement;
   header?: true;
@@ -35,20 +35,20 @@ const getTracks = (timeRanges: TimeRange[]): number[] => {
   return tracks;
 };
 
-const getTracksForBuňkas = (
-  buňky: Buňka[]
+const getTracksForCells = (
+  cells: Cell[]
 ): { tracks: number[]; groupTracksLen: Record<string, number> } => {
-  const groups = distinct(buňky.map((x) => x.group)).sort();
-  const tracks: number[] = Array(buňky.length);
+  const groups = distinct(cells.map((x) => x.group)).sort();
+  const tracks: number[] = Array(cells.length);
   const groupTracksLen: Record<string, number> = {};
   for (let gi = 0; gi < groups.length; gi++) {
     const group = groups[gi];
-    const buňkyWIndex = buňky
-      .map((buňka, index) => ({ index, buňka }))
-      .filter(({ buňka }) => buňka.group === group);
-    const groupTracks = getTracks(buňkyWIndex.map((x) => x.buňka.time));
+    const cellsWIndex = cells
+      .map((cell, index) => ({ index, cell }))
+      .filter(({ cell }) => cell.group === group);
+    const groupTracks = getTracks(cellsWIndex.map((x) => x.cell.time));
     // TODO: replace zip with faster for loop
-    zip(buňkyWIndex, groupTracks).forEach(([{ index }, track]) => {
+    zip(cellsWIndex, groupTracks).forEach(([{ index }, track]) => {
       tracks[index] = track;
     });
     groupTracksLen[group] = Math.max(...groupTracks);
@@ -57,16 +57,16 @@ const getTracksForBuňkas = (
 };
 
 const getTableStructure = (
-  buňky: Buňka[],
+  cells: Cell[],
   groups: string[],
   timeRange: TimeRange
-): StructureBuňka[][] => {
-  const table: StructureBuňka[][] = [];
+): StructureCell[][] => {
+  const table: StructureCell[][] = [];
 
-  const { tracks, groupTracksLen } = getTracksForBuňkas(buňky);
+  const { tracks, groupTracksLen } = getTracksForCells(cells);
 
   {
-    const headerRow: StructureBuňka[] = [{}];
+    const headerRow: StructureCell[] = [{}];
     range(timeRange.from, timeRange.to + 1).forEach((x) =>
       headerRow.push({ content: <>{x}</> })
     );
@@ -78,21 +78,21 @@ const getTableStructure = (
     range(maxTrack + 1).map((track) => {
       const row: { span?: number; content?: JSXElement; header?: true }[] =
         track ? [] : [{ content: <>{group}</>, span: maxTrack + 1, header: true }];
-      const c = zip(buňky, tracks)
+      const c = zip(cells, tracks)
         .filter(([, t]) => t === track)
-        .map(([buňka]) => buňka)
-        .filter((buňka) => buňka.group === group)
+        .map(([cell]) => cell)
+        .filter((cell) => cell.group === group)
         .sort((a, b) => a.time.from - b.time.from);
       range(timeRange.from, timeRange.to + 1).forEach((t) => {
         if (c[0] && c[0].time.to <= t) c.splice(0, 1);
-        const buňka = c[0];
-        if (buňka) {
-          if (buňka.time.from === t) {
+        const cell = c[0];
+        if (cell) {
+          if (cell.time.from === t) {
             row.push({
-              span: buňka.time.to - buňka.time.from,
-              content: buňka.element,
+              span: cell.time.to - cell.time.from,
+              content: cell.element,
             });
-          } else if (buňka.time.from > t) {
+          } else if (cell.time.from > t) {
             row.push({});
           }
         } else {
@@ -107,19 +107,19 @@ const getTableStructure = (
 };
 
 const getRangeFromTimetableProp = (props: TimetableProps): TimeRange => {
-  const { buňky, timeRange } = props;
+  const { cells, timeRange } = props;
 
   if (timeRange && timeRange !== "auto") return timeRange;
 
   // TODO: předávání parametrů funkce pře zásobník (...spread operátor), fuj
-  const minTimeHours = Math.min(...buňky.map((x) => x.time.from));
-  const maxTimeHours = Math.max(...buňky.map((x) => x.time.to));
+  const minTimeHours = Math.min(...cells.map((x) => x.time.from));
+  const maxTimeHours = Math.max(...cells.map((x) => x.time.to));
 
   return { from: minTimeHours, to: maxTimeHours };
 };
 
 export type TimetableProps = {
-  buňky: Buňka[];
+  cells: Cell[];
   groups: string[];
   timeRange?: TimeRange | "auto";
 };
@@ -128,16 +128,16 @@ export type TimetableProps = {
 let key = 0;
 
 export const Timetable = (props: TimetableProps) => {
-  const { buňky, groups } = props;
+  const { cells, groups } = props;
   const timeRange = getRangeFromTimetableProp(props);
 
-  const rowsStructure = getTableStructure(buňky, groups, timeRange);
+  const rowsStructure = getTableStructure(cells, groups, timeRange);
 
   const rows = rowsStructure.map((r, i) => (
     <tr>
       {r.map((c) =>
         !c.header ? (
-          // Normal buňka
+          // Normal cell
           i ? (
             <td colSpan={c?.span}>{c.content}</td>
           ) : (

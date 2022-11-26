@@ -1,5 +1,4 @@
 export * from "./array";
-export * from "./enum";
 export * from "./gamecon";
 export * from "./tranformace";
 

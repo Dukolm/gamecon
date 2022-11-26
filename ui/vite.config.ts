@@ -7,11 +7,10 @@ export default defineConfig({
   plugins: [preact()],
   build: {
     target: "es6",
-    // TODO: výstup půjde i nějak do web/soubory
-    outDir: "./../admin/files/ui",
+    outDir: "./../web/soubory/ui",
     emptyOutDir: true,
     lib: {
-      entry: path.resolve(__dirname, 'src/main.ts'),
+      entry: path.resolve(__dirname, 'src/main.tsx'),
       name: "script",
       fileName: () => "bundle.js",
       formats: ["iife"]
@@ -22,7 +21,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: `http://localhost:80/admin/api/`,
+        target: `http://localhost:80/web/`,
       },
     },
     host: true,

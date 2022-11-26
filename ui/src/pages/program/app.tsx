@@ -1,20 +1,19 @@
 import { GAMECON_KONSTANTY } from "../../env";
-import { ProgramLegenda } from "./components/ProgramLegenda";
+import { ProgramLegenda } from "./ProgramLegenda";
 import { ProgramURLState, useProgramSemanticRoute } from "./routing";
-import { ProgramTabulka } from "./components/tabulka/ProgramTabulka";
-import { ProgramUživatelskéVstupy } from "./components/vstupy/Vstupy";
+import { ProgramTabulka } from "./tabulka/ProgramTabulka";
+import { ProgramUživatelskéVstupy } from "./vstupy/Vstupy";
 
 import "./program.less";
-import { ProgramNáhled } from "./components/náhled/ProgramNáhled";
+import { ProgramNáhled } from "./náhled/ProgramNáhled";
 import { useState, useEffect } from "preact/hooks";
-import { Aktivita, fetchAktivity } from "../../api/program";
-import { FunctionComponent } from "preact";
+import { Aktivita, fetchAktivity } from "../../api";
 
 
 /** část odazu od které začíná programově specifické url managované preactem */
 export const PROGRAM_URL_NAME = "program";
 
-export const Program:FunctionComponent =  ()=> {
+export function Program() {
   const semanticRoute = useProgramSemanticRoute();
   const { urlState } = semanticRoute;
 
