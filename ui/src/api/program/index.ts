@@ -41,8 +41,8 @@ export type Aktivita = {
   prihlaseno?: boolean,
   /** uživatelská vlastnost */
   slevaNasobic?: number,
-  /** uživatelská vlastnost */
-  nahradnik?: boolean,
+  // /** uživatelská vlastnost */
+  // nahradnik?: boolean,
   /** orgovská vlastnost */
   mistnost?: string,
   /** orgovská vlastnost */

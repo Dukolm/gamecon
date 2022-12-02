@@ -4,6 +4,7 @@
 // TODO: udělat REST api definice
 
 use Gamecon\Cas\DateTimeCz;
+use Gamecon\Aktivita\Aktivita;
 
 $u = Uzivatel::zSession();
 
@@ -78,10 +79,11 @@ foreach ($aktivity as &$a) {
   if ($vedu)
     $aktivitaRes['vedu'] = $vedu;
 
+  /*
   $nahradnik = $u && $u->prihlasenJakoNahradnikNa($a);
   if ($nahradnik)
     $aktivitaRes['nahradnik'] = $nahradnik;
-
+  */
 
   $res[] = $aktivitaRes;
 }

@@ -178,6 +178,13 @@ SQL
         return (bool)$this->a['bez_slevy'];
     }
 
+    public function slevaNasobic(\Uzivatel $u = null) {
+        return (!$this->a['bez_slevy'] && $u && $u->gcPrihlasen())
+            ? $u->finance()->slevaAktivity()
+            : 1.
+            ;
+    }
+
     /**
      * Cena aktivity čitelná člověkem, poplatná aktuálnímu okamžiku. V případě
      * uvedení uživatele vrací pro něj specifickou cenu.
@@ -189,13 +196,7 @@ SQL
         if ($this->cenaZaklad() <= 0) {
             return 'zdarma';
         }
-        if ($this->a['bez_slevy']) {
-            return round($this->cenaZaklad()) . '&thinsp;Kč';
-        }
-        if ($u && $u->gcPrihlasen()) {
-            return round($this->cenaZaklad() * $u->finance()->slevaAktivity()) . '&thinsp;Kč';
-        }
-        return round($this->cenaZaklad()) . '&thinsp;Kč';
+        return round($this->cenaZaklad() * $this->slevaNasobic($u)) . '&thinsp;Kč';
     }
 
     /** Základní cena aktivity */
@@ -1074,6 +1075,22 @@ SQL
             default :
                 return '';
         }
+    }
+
+    public function obsazenostObj() {
+        $prihlasenoMuzu      = $this->prihlasenoMuzu(); // počty
+        $prihlasenoZen       = $this->prihlasenoZen();
+        $kapacitaMuzi        = (int)$this->a['kapacita_m']; // kapacity
+        $kapacitaZeny        = (int)$this->a['kapacita_f'];
+        $kapacitaUniverzalni = (int)$this->a['kapacita'];
+
+        return [
+            'm'  => $prihlasenoMuzu,
+            'f'  => $prihlasenoZen,
+            'km' => $kapacitaMuzi,
+            'kf' => $kapacitaZeny,
+            'ku' => $kapacitaUniverzalni
+        ];
     }
 
     /**
