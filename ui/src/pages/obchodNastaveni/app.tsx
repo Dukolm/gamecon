@@ -12,8 +12,6 @@ import {
 } from "../../api/obchod/types";
 import { EditorMřížek } from "./EditorMřížek";
 
-type TObchodNastaveniProps = {};
-
 /** kam se můžu prokliknout přes buňku */
 export type Cíle = {
   předměty: { id: number; text: string }[];
@@ -37,10 +35,9 @@ const usePředměty = () => {
 
 /**
  * výběr DefiniceObchodMřížka (ID)
- *
  */
 
-export const ObchodNastaveni: FunctionComponent<TObchodNastaveniProps> = (
+export const ObchodNastaveni: FunctionComponent = (
   props
 ) => {
   const {} = props;

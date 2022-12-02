@@ -13,7 +13,7 @@ import { Aktivita, fetchAktivity } from "../../api";
 /** část odazu od které začíná programově specifické url managované preactem */
 export const PROGRAM_URL_NAME = "program";
 
-export function Program() {
+export const Program = () => {
   const semanticRoute = useProgramSemanticRoute();
   const { urlState } = semanticRoute;
 

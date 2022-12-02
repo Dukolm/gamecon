@@ -8,6 +8,12 @@
   </head>
   <body>
     <div id="preact-program"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Konstanty předáváné do Preactu (env.ts)
+      window.GAMECON_KONSTANTY = {
+        IS_DEV_SERVER: true,
+      }
+    </script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -8,6 +8,22 @@ use Gamecon\Aktivita\Aktivita;
 
 $u = Uzivatel::zSession();
 
+// TODO: remove tesing snippet: 
+/*
+Promise.all(
+  [2016, 2017, 2022]
+    .map(rok => 
+      fetch(`/web/api/aktivityProgram?rok=${rok}`, {method:"POST"})
+        .then(x=>x.json())
+        .catch(x=>[])
+        .then(x=>[rok, x])
+      )
+  )
+  .then(x=>Object.fromEntries(x))
+  .then(x=>console.log(x))
+
+fetch("/web/api/aktivityProgram", {method:"POST"}).then(x=>x.text()).then(x=>console.log(x))
+*/
 // TODO: je potřeba otestovat taky $u->gcPrihlasen() ?
 // TODO: tohle nastavení by mělo platit pro všechny php soubory ve složce api
 $this->bezStranky(true);

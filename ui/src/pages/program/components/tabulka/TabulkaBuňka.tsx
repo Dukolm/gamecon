@@ -77,9 +77,9 @@ export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
   if (aktivita.vedu) {
     classes.push("organizator");
   }
-  if (aktivita.nahradnik) {
-    classes.push("nahradnik");
-  }
+  // if (aktivita.nahradnik) {
+  //   classes.push("nahradnik");
+  // }
   if (aktivita.vdalsiVlne) {
     classes.push("vDalsiVlne");
   }

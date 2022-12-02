@@ -4,7 +4,7 @@ import {
   DefiniceObchodMřížkaBuňka,
   DefiniceObchodMřížkaBuňkaTyp,
 } from "../../../api/obchod/types";
-import { getEnumNames, getEnumValues } from "../../../utils";
+import { getEnumNames } from "../../../utils/enum";
 import { CíleContext } from "../app";
 
 type TEditorBuňkyProps = {
