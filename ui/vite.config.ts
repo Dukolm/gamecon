@@ -8,6 +8,8 @@ export default defineConfig({
   build: {
     target: "es6",
     outDir: "./../web/soubory/ui",
+    // TODO: výstup půjde i nějak do web/soubory
+    // outDir: "./../admin/files/ui",
     emptyOutDir: true,
     lib: {
       entry: path.resolve(__dirname, 'src/main.ts'),
@@ -21,7 +23,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: `http://localhost:80/web/`,
+        target: `http://localhost:80/admin/api/`,
       },
     },
     host: true,

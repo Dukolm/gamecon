@@ -1,13 +1,11 @@
-import { Program } from "./program/App"
+import { Program } from "./program"
 import { Obchod } from "./obchod";
 import { ObchodNastaveni } from "./obchodNastaveni";
-import { FunctionComponent, render } from "preact";
+import { render } from "preact";
 import Router, { Route } from "preact-router";
 
-import '../index.less'
-
 // TODO: otypovat component
-const renderComponent = (rootId: string, component: FunctionComponent<{}>) =>{
+const renderComponent = (rootId: string, component: any) =>{
   const root = document.getElementById(rootId);
 
   if (root) {

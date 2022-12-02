@@ -7,31 +7,37 @@ import { range } from "./utils";
 
 
 type GameconKonstanty = {
+  IS_DEV_SERVER: boolean,
   /**
    * cesta k této stráce v rámci které se preact využívá.
    * například /web/program/
    */
-  BASE_PATH_PAGE: string;
+  BASE_PATH_PAGE: string,
   /**
    * cesta k api
    * například /web/api/
    */
-  BASE_PATH_API: string;
+  BASE_PATH_API: string,
   ROK: number,
   PROGRAM_OD: number,
   PROGRAM_DO: number,
   PROGRAM_DNY: number[],
   LEGENDA: string,
-  IS_DEV_SERVER: boolean,
 };
 
 declare global {
   interface Window {
     GAMECON_KONSTANTY: Partial<GameconKonstanty>;
+    preactMost: {
+      obchod: {
+        show?: (() => void) | undefined,
+      }
+    }
   }
 }
 
 const GAMECON_KONSTANTY_DEFAULT: GameconKonstanty = {
+  IS_DEV_SERVER: false,
   BASE_PATH_PAGE: "/",
   BASE_PATH_API: "/api/",
   ROK: 2022,
@@ -39,7 +45,6 @@ const GAMECON_KONSTANTY_DEFAULT: GameconKonstanty = {
   PROGRAM_DO: 1658689200000,
   PROGRAM_DNY: [],
   LEGENDA: "",
-  IS_DEV_SERVER: false,
 };
 
 export const GAMECON_KONSTANTY = {
@@ -52,3 +57,10 @@ GAMECON_KONSTANTY.PROGRAM_DNY = range(GAMECON_KONSTANTY.PROGRAM_OD, GAMECON_KONS
 
 /** Roky ve kterých se gamecon konal */
 export const ROKY = range(2009, GAMECON_KONSTANTY.ROK).filter(x=>x !== 2020);
+
+export const initEnv = () => {
+  window.preactMost = {
+    obchod: {
+    }
+  };
+}

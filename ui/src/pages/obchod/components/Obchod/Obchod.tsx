@@ -123,11 +123,11 @@ export const Obchod: FunctionComponent<TObchodProps> = (props) => {
   } = usePředmětyObjednávka();
   const { mřížka, setMřížka } = useMřižka(definice);
 
-  // useEffect(() => {
-  //   window.preactMost.obchod.show = () => {
-  //     setVisible(true);
-  //   };
-  // }, []);
+  useEffect(() => {
+    window.preactMost.obchod.show = () => {
+      setVisible(true);
+    };
+  }, []);
 
   const onBuňkaClicked = useCallback((buňka: DefiniceObchodMřížkaBuňka) => {
     switch (buňka.typ) {
