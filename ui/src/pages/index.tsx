@@ -1,26 +1,35 @@
 import { Program } from "./program";
 import { Obchod } from "./obchod";
 import { ObchodNastaveni } from "./obchodNastaveni";
-import { FunctionComponent, render } from "preact";
+import { Fragment, FunctionComponent, JSX, render } from "preact";
 import Router, { Route } from "preact-router";
+import { GAMECON_KONSTANTY } from "../env";
+import { ProgramWrapper } from "../testing/ProgramWrapper";
 
-// TODO: otypovat component
-const renderComponent = (rootId: string, component: FunctionComponent) =>{
+const renderComponent = (
+  rootId: string,
+  Component: FunctionComponent,
+  DevWrap?: FunctionComponent<{ children: JSX.Element }>
+) => {
   const root = document.getElementById(rootId);
 
   if (root) {
     root.innerHTML = "";
+    const Wrapper =
+      GAMECON_KONSTANTY.IS_DEV_SERVER && DevWrap ? DevWrap : Fragment;
     render(
-      <Router>
-        <Route component={component} default />
-      </Router>
-      , root);
+      <Wrapper>
+        <Router>
+          <Route component={Component} default />
+        </Router>
+      </Wrapper>,
+      root
+    );
   }
 };
 
-export const renderPages = () =>{
+export const renderPages = () => {
   renderComponent("preact-obchod-nastaveni", ObchodNastaveni);
-  renderComponent("preact-program", Program);
+  renderComponent("preact-program", Program, ProgramWrapper);
   renderComponent("preact-obchod", Obchod);
 };
-

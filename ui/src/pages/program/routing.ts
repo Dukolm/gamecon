@@ -1,6 +1,6 @@
 import { createContext } from "preact";
 import { useEffect } from "preact/hooks";
-import { usePath as useUrl } from "../../api/program/util";
+import { usePath } from "../../api/util";
 import { GAMECON_KONSTANTY } from "../../env";
 import { formátujDenVTýdnu, tryParseNumber } from "../../utils";
 
@@ -90,7 +90,7 @@ const parseUrlState = (url: string): ProgramURLState | undefined => {
 
 // TODO: použít kontext ?
 export const useProgramSemanticRoute = () => {
-  const [url, setUrl] = useUrl();
+  const [url, setUrl] = usePath();
 
   const parsedUrlState = parseUrlState(url);
   const urlState = parsedUrlState ?? DEFAULT_URLSTATE;

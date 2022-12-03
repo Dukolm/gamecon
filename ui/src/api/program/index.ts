@@ -1,6 +1,5 @@
 import { GAMECON_KONSTANTY } from "../../env";
-
-export * from "./fakeApi";
+import { fetchTestovacíAktivity } from "../../testing/fakeAPI";
 
 export type ActivityStatus =
   | "vDalsiVlne"
@@ -53,6 +52,9 @@ export type Aktivita = {
 // TODO: dotahovat zvlášť aktivity a metadata k nim (současně posílá moc velký soubor)
 
 export const fetchAktivity = async (rok: number): Promise<Aktivita[]> => {
+  if (GAMECON_KONSTANTY.IS_DEV_SERVER) {
+    return fetchTestovacíAktivity(rok);
+  }
   const url = `${GAMECON_KONSTANTY.BASE_PATH_API}aktivityProgram?${rok ? `rok=${rok}` : ""}`;
   return fetch(url, { method: "POST" }).then(async x => x.json());
 };

@@ -10,6 +10,14 @@ $u = Uzivatel::zSession();
 
 // TODO: remove tesing snippet: 
 /*
+var downloadAsJSON = (storageObj, name= "object") =>{
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(storageObj));
+  const dlAnchorElem = document.createElement("a");
+  dlAnchorElem.setAttribute("href",     dataStr     );
+  dlAnchorElem.setAttribute("download", `${name}.json`);
+  dlAnchorElem.click();
+}
+
 Promise.all(
   [2016, 2017, 2022]
     .map(rok => 
@@ -20,7 +28,7 @@ Promise.all(
       )
   )
   .then(x=>Object.fromEntries(x))
-  .then(x=>console.log(x))
+  .then(x=>downloadAsJSON(x, "aktivityProgram"))
 
 fetch("/web/api/aktivityProgram", {method:"POST"}).then(x=>x.text()).then(x=>console.log(x))
 */

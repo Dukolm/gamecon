@@ -37,10 +37,10 @@
         "SwitchCase": 1
       }
     ],
-    "linebreak-style": [
-      "error",
-      "unix"
-    ],
+    // "linebreak-style": [
+    //   "error",
+    //   "unix"
+    // ],
     "quotes": [
       "warn",
       "double",
@@ -70,6 +70,7 @@
     // asi není úplně ok nevynucovat key
     "react/jsx-key": "off",
     "no-empty-pattern": "off",
+    "@typescript-eslint/no-empty-pattern": "off",
     // validace budeme ignorovat. Doufáme že v runtime bude vše ok
     "react/prop-types": "off",
     "@typescript-eslint/no-unused-vars": [

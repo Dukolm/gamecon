@@ -1,10 +1,10 @@
-import { KONCOVKA_DLE_POHLAVÍ, ORGANIZATOR } from "../../../api/program";
 import { GAMECON_KONSTANTY } from "../../../env";
 
 export const ProgramLegenda = () => {
   const legendaText = GAMECON_KONSTANTY.LEGENDA;
-  const organizator = ORGANIZATOR;
-  const koncovkaDlePohlaví = KONCOVKA_DLE_POHLAVÍ;
+  // TODO:
+  const organizator = false;
+  const koncovkaDlePohlaví = "";
 
   return (
     <div class="program_legenda">
