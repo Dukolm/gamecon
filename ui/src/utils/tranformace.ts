@@ -1,5 +1,4 @@
-import { Aktivita, Obsazenost } from "../api/program";
-import { TimeRange } from "../components/Timetable";
+import { Aktivita, Obsazenost, OdDo } from "../api/program";
 import { containsSame } from ".";
 
 
@@ -53,10 +52,10 @@ export const obsazenostZVolnoTyp = (obsazenost: Obsazenost) => {
   return "u"; //je volno a žádné pohlaví nevyžralo limit míst
 };
 
-export const casRozsahZAktivit = (aktivity: Aktivita[]): TimeRange => {
+export const casRozsahZAktivit = (aktivity: Aktivita[]): OdDo => {
   // TODO: better way, spread operator passes arguments through stack, not optimal
   const casOd = Math.min(...aktivity.map(x => x.cas.od));
   const casDo = Math.max(...aktivity.map(x => x.cas.do));
 
-  return { from: casOd, to: casDo };
+  return { od: casOd, do: casDo };
 };

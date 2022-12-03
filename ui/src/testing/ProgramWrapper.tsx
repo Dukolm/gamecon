@@ -1,5 +1,6 @@
 import { FunctionComponent } from "preact";
 import "./css.cache.css";
+import "./program.css";
 
 type TProgramWrapperProps = {
   children:JSXElement

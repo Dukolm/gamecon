@@ -22,17 +22,21 @@ export const doplňHáčkyDoDne = (den: string) => {
 };
 
 /** den v týdnu bez háčků */
-export const formátujDenVTýdnu = (datum: Date) => {
+export const formátujDenVTýdnu = (datum: Date | number, háčky = false) => {
+  const datumObjekt = typeof datum === "number"
+    ? new Date(datum)
+    : datum
+    ;
   // vrací den v týdnu začínající nedělí
   //  proto potřebujeme den o jedno posunout zpět
-  const denVTýdnu = (datum.getDay() + 6) % 7;
+  const denVTýdnu = (datumObjekt.getDay() + 6) % 7;
   const denText = DNY_NÁZVY[denVTýdnu];
-  return denText;
+  return háčky ? doplňHáčkyDoDne(denText) : denText;
 };
 
 /** datum ve tvaru "denVTýdnuNázev denVMesíci.měsíc" */
 export const formátujDatum = (datum: Date) => {
-  const denText = doplňHáčkyDoDne(formátujDenVTýdnu(datum));
+  const denText = formátujDenVTýdnu(datum, true);
   const den = datum.getDate();
   // Měsíce jsou oproti dnům idexované od 0. fakt se mě neptejte proč
   const měsíc = datum.getMonth() + 1;

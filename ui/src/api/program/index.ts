@@ -17,6 +17,11 @@ export type Obsazenost = {
   ku: number,
 }
 
+export type OdDo = {
+  od: number,
+  do: number,
+};
+
 export type Aktivita = {
   id: number,
   nazev: string,
@@ -27,10 +32,7 @@ export type Aktivita = {
   stitky: string[],
   cenaZaklad: number,
   casText: string,
-  cas: {
-    od: number,
-    do: number,
-  },
+  cas: OdDo,
   obsazenost: Obsazenost,
   linie: string,
   vBudoucnu?: boolean,
