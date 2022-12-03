@@ -1,4 +1,4 @@
-import type { MyStateCreator } from ".";
+import { MyStateCreator } from ".";
 import { sleep } from "../utils";
 
 export type ExmampleSlice = {

@@ -1,4 +1,4 @@
-import type { FunctionComponent } from "preact";
+import { FunctionComponent } from "preact";
 import { createContext } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import {
@@ -6,7 +6,7 @@ import {
   fetchNastavMřížky,
   fetchPředměty,
 } from "../../api/obchod/endpoints";
-import type {
+import {
   DefiniceObchod,
   DefiniceObchodMřížka,
   Předmět,

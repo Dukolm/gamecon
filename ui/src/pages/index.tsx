@@ -1,11 +1,11 @@
 import { Program } from "./program";
 import { Obchod } from "./obchod";
 import { ObchodNastaveni } from "./obchodNastaveni";
-import { render } from "preact";
+import { FunctionComponent, render } from "preact";
 import Router, { Route } from "preact-router";
 
 // TODO: otypovat component
-const renderComponent = (rootId: string, component: any) =>{
+const renderComponent = (rootId: string, component: FunctionComponent) =>{
   const root = document.getElementById(rootId);
 
   if (root) {

@@ -1,5 +1,5 @@
-import type { FunctionComponent } from "preact";
-import type { Aktivita } from "../../../../api/program";
+import { FunctionComponent } from "preact";
+import { Aktivita } from "../../../../api/program";
 import { useContext, useRef } from "preact/hooks";
 import { Timetable } from "../../../../components/Timetable";
 import { distinct } from "../../../../utils";

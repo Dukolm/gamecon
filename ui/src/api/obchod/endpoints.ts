@@ -1,4 +1,4 @@
-import type { DefiniceObchod, DefiniceObchodMřížkaBuňka, DefiniceObchodMřížkaBuňkaPředmět, DefiniceObchodMřížkaBuňkaStránka, ObjednávkaPředmět, Předmět } from "./types";
+import { DefiniceObchod, DefiniceObchodMřížkaBuňka, DefiniceObchodMřížkaBuňkaPředmět, DefiniceObchodMřížkaBuňkaStránka, ObjednávkaPředmět, Předmět } from "./types";
 import { GAMECON_KONSTANTY } from "../../env";
 import { sleep } from "../../utils";
 import { DefiniceObchodMřížkaBuňkaTyp } from "./types";

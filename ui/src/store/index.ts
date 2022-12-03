@@ -1,5 +1,5 @@
-import type { ExmampleSlice } from "./example";
-import type { StateCreator } from "zustand";
+import { ExmampleSlice } from "./example";
+import { StateCreator } from "zustand";
 import create from "zustand";
 import { createExampleSlice } from "./example";
 import { devtools } from "zustand/middleware";

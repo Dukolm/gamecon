@@ -93,14 +93,6 @@
         ]
       }
     ],
-    "@typescript-eslint/consistent-type-imports": [
-      "warn",
-      {
-        "prefer": "type-imports",
-        "disallowTypeAnnotations": true,
-        "fixStyle": "separate-type-imports"
-      }
-    ],
     "@typescript-eslint/consistent-type-exports": "warn",
     "@typescript-eslint/no-confusing-void-expression": "warn",
     "@typescript-eslint/prefer-regexp-exec": "warn",

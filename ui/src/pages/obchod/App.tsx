@@ -1,8 +1,8 @@
-import type { FunctionComponent } from "preact";
+import { FunctionComponent } from "preact";
 import { createContext } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { fetchMřížky, fetchPředměty } from "../../api/obchod/endpoints";
-import type { DefiniceObchod, Předmět } from "../../api/obchod/types";
+import { DefiniceObchod, Předmět } from "../../api/obchod/types";
 import { Obchod } from "./components/Obchod";
 import "./App.less";
 

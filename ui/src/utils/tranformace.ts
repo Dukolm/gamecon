@@ -1,5 +1,5 @@
-import type { Aktivita, Obsazenost } from "../api";
-import type { TimeRange } from "../components/Timetable";
+import { Aktivita, Obsazenost } from "../api";
+import { TimeRange } from "../components/Timetable";
 import { containsSame } from ".";
 
 

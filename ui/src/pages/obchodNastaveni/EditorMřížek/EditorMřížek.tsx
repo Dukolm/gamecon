@@ -1,6 +1,6 @@
-import type { FunctionComponent } from "preact";
+import { FunctionComponent } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import type {
+import {
   DefiniceObchodMřížka,
   DefiniceObchodMřížkaBuňka,
 } from "../../../api/obchod/types";

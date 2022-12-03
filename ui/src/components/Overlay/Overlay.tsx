@@ -1,4 +1,4 @@
-import type { FunctionComponent } from "preact";
+import { FunctionComponent } from "preact";
 
 import "./Overlay.less";
 

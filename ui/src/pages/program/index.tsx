@@ -1,5 +1,5 @@
-import type { Aktivita} from "../../api/program";
-import type { FunctionComponent } from "preact";
+import { Aktivita} from "../../api/program";
+import { FunctionComponent } from "preact";
 import { GAMECON_KONSTANTY } from "../../env";
 import { ProgramLegenda } from "./components/ProgramLegenda";
 import { ProgramURLState, useProgramSemanticRoute } from "./routing";

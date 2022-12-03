@@ -1,5 +1,5 @@
-import type { FunctionComponent } from "preact";
-import type {
+import { FunctionComponent } from "preact";
+import {
   DefiniceObchod,
   DefiniceObchodMřížka,
   DefiniceObchodMřížkaBuňka,

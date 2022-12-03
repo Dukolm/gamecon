@@ -1,4 +1,4 @@
-import type { Aktivita, Obsazenost } from "../../../../api/program";
+import { Aktivita, Obsazenost } from "../../../../api/program";
 import { useContext } from "preact/hooks";
 import { obsazenostZVolnoTyp } from "../../../../utils/tranformace";
 import { ProgramURLState } from "../../routing";

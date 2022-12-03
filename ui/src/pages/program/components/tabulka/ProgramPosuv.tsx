@@ -1,5 +1,5 @@
-import type Preact from "preact";
-import type { Ref} from "preact/hooks";
+import Preact from "preact";
+import { Ref} from "preact/hooks";
 import { useEffect, useState } from "preact/hooks";
 
 const POSUN = 220;

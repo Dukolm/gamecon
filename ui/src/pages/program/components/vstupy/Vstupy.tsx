@@ -1,4 +1,4 @@
-import type { FunctionComponent } from "preact";
+import { FunctionComponent } from "preact";
 import { useContext } from "preact/hooks";
 import { GAMECON_KONSTANTY } from "../../../../env";
 import {
