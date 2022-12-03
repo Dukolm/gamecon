@@ -9,7 +9,7 @@ const NÁHLED_QUERY_STRING = "idAktivityNahled";
 export type ProgramURLState = {
   výběr: ProgramTabulkaVýběr,
   aktivitaNáhledId?: number,
-};
+}
 
 export type ProgramTabulkaVýběr =
   | {
@@ -25,13 +25,13 @@ const DEFAULT_URLSTATE: ProgramURLState = {
     typ: "den",
     datum: new Date(GAMECON_KONSTANTY.PROGRAM_OD),
   },
-}
+};
 
 const urlZTabulkaVýběr = (výběr: ProgramTabulkaVýběr) =>
   "/" + (výběr.typ === "můj"
     ? "muj_program"
     : formátujDenVTýdnu(výběr.datum));
-;
+
 
 export const porovnejTabulkaVýběr = (v1: ProgramTabulkaVýběr, v2: ProgramTabulkaVýběr) =>
   urlZTabulkaVýběr(v1) === urlZTabulkaVýběr(v2);
@@ -45,12 +45,12 @@ const tabulkaMožnosti = (props?: { přihlášen?: boolean }): ProgramTabulkaVý
       datum: new Date(den),
     } as ProgramTabulkaVýběr))
     .concat(...((props?.přihlášen ?? false) ? [{ typ: "můj" } as ProgramTabulkaVýběr] : []));
-;
+
 
 
 const generateUrl = (urlState: ProgramURLState): string | undefined => {
   const výběr =
-    tabulkaMožnosti().find(x => porovnejTabulkaVýběr(x, urlState.výběr))
+    tabulkaMožnosti().find(x => porovnejTabulkaVýběr(x, urlState.výběr));
 
   if (!výběr) return undefined;
 
@@ -65,7 +65,7 @@ const generateUrl = (urlState: ProgramURLState): string | undefined => {
     url += "?" + search.join("&");
 
   return url;
-}
+};
 
 // Tady je adresa irelevantní nebudeme s ní pracovat
 const getURLObject = (url: string) => new URL(url, "http://gamecon.cz");
@@ -86,7 +86,7 @@ const parseUrlState = (url: string): ProgramURLState | undefined => {
     resObj.aktivitaNáhledId = nahledIdStr;
 
   return resObj;
-}
+};
 
 // TODO: použít kontext ?
 export const useProgramSemanticRoute = () => {
@@ -105,11 +105,11 @@ export const useProgramSemanticRoute = () => {
 
   useEffect(() => {
     if (!parsedUrlState)
-      setUrl(generateUrl(DEFAULT_URLSTATE)!);
-  }, [url, parsedUrlState])
+      setUrl(generateUrl(DEFAULT_URLSTATE) as string);
+  }, [url, parsedUrlState]);
 
   return { urlState, setUrlState, možnosti: tabulkaMožnosti() };
-}
+};
 
 type ProgramMutableURLState = {
   urlState: ProgramURLState;

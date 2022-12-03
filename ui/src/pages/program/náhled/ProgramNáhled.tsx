@@ -1,8 +1,8 @@
-import { FunctionComponent } from "preact";
+import type { FunctionComponent } from "preact";
+import type { Aktivita } from "../../../api";
 import { useEffect, useRef } from "preact/hooks";
-import { Aktivita } from "../../../api";
 
-type ProgramNáhledProps = { aktivita: Aktivita };
+type ProgramNáhledProps = { aktivita: Aktivita }
 
 // TODO: obsazenost
 export const ProgramNáhled: FunctionComponent<ProgramNáhledProps> = (props) => {
@@ -11,7 +11,7 @@ export const ProgramNáhled: FunctionComponent<ProgramNáhledProps> = (props) =>
   const programNáhledTextRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    programNáhledTextRef.current?.scroll?.(0, 0);
+    programNáhledTextRef.current?.scroll(0, 0);
   }, [aktivita]);
 
   return (

@@ -1,13 +1,13 @@
-import { MyStateCreator } from ".";
+import type { MyStateCreator } from ".";
 import { sleep } from "../utils";
 
 export type ExmampleSlice = {
   example: {
     value: number,
-    setValue(value: number): Promise<void>,
-    increaseValue(): void,
+    setValue: (value: number) => Promise<void>,
+    increaseValue: () => void,
   }
-};
+}
 
 export const createExampleSlice: MyStateCreator<ExmampleSlice> = (set, get) => ({
   example: {
@@ -19,7 +19,7 @@ export const createExampleSlice: MyStateCreator<ExmampleSlice> = (set, get) => (
     },
     increaseValue() {
       const newValue = get().example.value+1;
-      set(s=>{s.example.value = newValue});
+      set(s=>{s.example.value = newValue;});
       // Totožné s set(s=>{s.example.value++;}) ale umožňuje větší kontrolu nad operacemi pomocí použítí get()
     },
   },

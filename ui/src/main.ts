@@ -1,5 +1,5 @@
 import { initEnv } from "./env";
-import { renderPages } from "./pages"
+import { renderPages } from "./pages";
 
 // TODO: linter
 // TODO: použít absolutní importy ?
@@ -22,7 +22,7 @@ import { renderPages } from "./pages"
                   - může editovat pouze hodnoty ve svém klíčí
                   - může 
 */
-console.log("Preact starting ...")
+console.log("Preact starting ...");
 
 initEnv();
 renderPages();

@@ -1,19 +1,19 @@
 import { distinct, range, zip } from "../utils";
 
 
-export type TimeRange = { from: number; to: number };
+export type TimeRange = { from: number; to: number }
 
 export type Buňka = {
   time: TimeRange;
   group: string;
   element: JSXElement;
-};
+}
 
 export type StructureBuňka = {
   span?: number;
   content?: JSXElement;
   header?: true;
-};
+}
 
 
 const getTracks = (timeRanges: TimeRange[]): number[] => {
@@ -41,8 +41,7 @@ const getTracksForBuňkas = (
   const groups = distinct(buňky.map((x) => x.group)).sort();
   const tracks: number[] = Array(buňky.length);
   const groupTracksLen: Record<string, number> = {};
-  for (let gi = 0; gi < groups.length; gi++) {
-    const group = groups[gi];
+  for (const group of groups) {
     const buňkyWIndex = buňky
       .map((buňka, index) => ({ index, buňka }))
       .filter(({ buňka }) => buňka.group === group);
@@ -85,7 +84,7 @@ const getTableStructure = (
         .sort((a, b) => a.time.from - b.time.from);
       range(timeRange.from, timeRange.to + 1).forEach((t) => {
         if (c[0] && c[0].time.to <= t) c.splice(0, 1);
-        const buňka = c[0];
+        const buňka = c[0] as Buňka | undefined;
         if (buňka) {
           if (buňka.time.from === t) {
             row.push({
@@ -122,7 +121,7 @@ export type TimetableProps = {
   buňky: Buňka[];
   groups: string[];
   timeRange?: TimeRange | "auto";
-};
+}
 
 // TODO: quickfix, přerenderuje pokaždé všechny buňky, bylo by potřeba nějak udělat ID pro každou událost asi
 let key = 0;
@@ -139,20 +138,20 @@ export const Timetable = (props: TimetableProps) => {
         !c.header ? (
           // Normal buňka
           i ? (
-            <td colSpan={c?.span}>{c.content}</td>
+            <td colSpan={c.span}>{c.content}</td>
           ) : (
-            <th colSpan={c?.span}>{c.content}</th>
+            <th colSpan={c.span}>{c.content}</th>
           )
         ) : // Left header
-        i ? (
-          <td key={key++} rowSpan={c?.span || 1}>
-            <div class="program_nazevLinie">{c.content}</div>
-          </td>
-        ) : (
-          <th key={key++} rowSpan={c?.span || 1}>
-            <div class="program_nazevLinie">{c.content}</div>
-          </th>
-        )
+          i ? (
+            <td key={key++} rowSpan={c.span ?? 1}>
+              <div class="program_nazevLinie">{c.content}</div>
+            </td>
+          ) : (
+            <th key={key++} rowSpan={c.span ?? 1}>
+              <div class="program_nazevLinie">{c.content}</div>
+            </th>
+          )
       )}
     </tr>
   ));

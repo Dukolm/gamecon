@@ -10,14 +10,14 @@ export const usePath = () => {
   const url = route.url;
 
   // přidám k url poslední / pokud by tam nebylo
-  if ((url + "/").substring(0, BASE_PATH_PAGE.length) !== BASE_PATH_PAGE)
+  if (!(url + "/").startsWith(BASE_PATH_PAGE))
     throw new Error(`invalid base path BASE_PATH_PAGE= ${BASE_PATH_PAGE} current path= ${url}`);
 
-  let resUlr = url.substring(BASE_PATH_PAGE.length);
+  const resUlr = url.substring(BASE_PATH_PAGE.length);
 
   return [resUlr, (path: string, replace = false) => {
     const url = BASE_PATH_PAGE + path.substring(1);
     setRoute(url, replace);
   }] as const;
-}
+};
 

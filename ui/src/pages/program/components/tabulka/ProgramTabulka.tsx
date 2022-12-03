@@ -1,6 +1,6 @@
-import { FunctionComponent } from "preact";
+import type { FunctionComponent } from "preact";
+import type { Aktivita } from "../../../../api/program";
 import { useContext, useRef } from "preact/hooks";
-import { Aktivita } from "../../../../api/program";
 import { Timetable } from "../../../../components/Timetable";
 import { distinct } from "../../../../utils";
 import { ProgramURLState } from "../../routing";
@@ -9,7 +9,7 @@ import { TabulkaBuňka } from "./TabulkaBuňka";
 
 type ProgramTabulkaProps = {
   aktivity: Aktivita[];
-};
+}
 
 export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
   props

@@ -1,9 +1,9 @@
 import { useContext } from "preact/hooks";
-import { Aktivita, Obsazenost } from "../../../api";
+import type { Aktivita, Obsazenost } from "../../../api";
 import { obsazenostZVolnoTyp } from "../../../utils/tranformace";
 import { ProgramURLState } from "../routing";
 
-type ObsazenostProps = { obsazenost: Obsazenost };
+type ObsazenostProps = { obsazenost: Obsazenost }
 
 const ObsazenostComp = (props: ObsazenostProps) => {
   const { obsazenost } = props;
@@ -50,7 +50,7 @@ const ObsazenostComp = (props: ObsazenostProps) => {
 
 type TabulkaBuňkaProps = {
   aktivita: Aktivita;
-};
+}
 
 export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
   const { aktivita } = props;
@@ -97,7 +97,7 @@ export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
         class="title"
         title={aktivita.nazev}
         onClick={() =>
-          setUrlState({ ...urlState, aktivitaNáhledId: aktivita.id })
+        { setUrlState({ ...urlState, aktivitaNáhledId: aktivita.id }); }
         }
       >
         {aktivita.nazev.substring(0, 20)}

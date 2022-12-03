@@ -1,11 +1,12 @@
-import { createContext, FunctionComponent } from "preact";
-import { StateUpdater, useCallback, useEffect, useState } from "preact/hooks";
+import type { FunctionComponent } from "preact";
+import { createContext } from "preact";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import {
   fetchMřížky,
   fetchNastavMřížky,
   fetchPředměty,
 } from "../../api/obchod/endpoints";
-import {
+import type {
   DefiniceObchod,
   DefiniceObchodMřížka,
   Předmět,
@@ -16,7 +17,7 @@ import { EditorMřížek } from "./EditorMřížek";
 export type Cíle = {
   předměty: { id: number; text: string }[];
   mřížky: { id: number; text: string }[];
-};
+}
 
 export const CíleContext = createContext<Cíle>({
   předměty: [],
@@ -26,7 +27,7 @@ export const CíleContext = createContext<Cíle>({
 const usePředměty = () => {
   const [předměty, setPředměty] = useState<Předmět[] | null | undefined>();
   useEffect(() => {
-    (async () => {
+    void (async () => {
       setPředměty(await fetchPředměty());
     })();
   }, []);
@@ -55,7 +56,7 @@ export const ObchodNastaveni: FunctionComponent = (
   const předměty = usePředměty();
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       setDefiniceObchod(await fetchMřížky());
     })();
   }, []);
@@ -81,7 +82,7 @@ export const ObchodNastaveni: FunctionComponent = (
     <>
       <CíleContext.Provider value={cíle}>
         <EditorMřížek
-          {...{ mřížky: definiceObchod!.mřížky, setMřížky, uložMřížky }}
+          {...{ mřížky: definiceObchod.mřížky, setMřížky, uložMřížky }}
         />
       </CíleContext.Provider>
     </>

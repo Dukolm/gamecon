@@ -1,3 +1,5 @@
+import type { Aktivita} from "../../api/program";
+import type { FunctionComponent } from "preact";
 import { GAMECON_KONSTANTY } from "../../env";
 import { ProgramLegenda } from "./components/ProgramLegenda";
 import { ProgramURLState, useProgramSemanticRoute } from "./routing";
@@ -6,15 +8,13 @@ import { ProgramUživatelskéVstupy } from "./components/vstupy/Vstupy";
 
 import "./program.less";
 import { ProgramNáhled } from "./components/náhled/ProgramNáhled";
-import { useState, useEffect } from "preact/hooks";
-import { Aktivita, fetchAktivity } from "../../api/program";
-import { FunctionComponent } from "preact";
-
+import { useEffect, useState } from "preact/hooks";
+import { fetchAktivity } from "../../api/program";
 
 /** část odazu od které začíná programově specifické url managované preactem */
 export const PROGRAM_URL_NAME = "program";
 
-export const Program:FunctionComponent =  ()=> {
+export const Program: FunctionComponent = () => {
   const semanticRoute = useProgramSemanticRoute();
   const { urlState } = semanticRoute;
 
@@ -26,7 +26,7 @@ export const Program:FunctionComponent =  ()=> {
       : undefined;
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       const aktivity = await fetchAktivity(GAMECON_KONSTANTY.ROK);
       setAktivity(aktivity);
     })();
@@ -44,4 +44,4 @@ export const Program:FunctionComponent =  ()=> {
       </div>
     </ProgramURLState.Provider>
   );
-}
+};

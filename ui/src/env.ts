@@ -23,9 +23,12 @@ type GameconKonstanty = {
   PROGRAM_DO: number,
   PROGRAM_DNY: number[],
   LEGENDA: string,
-};
+}
 
 declare global {
+  // interface se automaticky propojí s existujícím 
+  //   proto je nutné použít interface a né type
+  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     GAMECON_KONSTANTY: Partial<GameconKonstanty>;
     preactMost: {
@@ -50,7 +53,7 @@ const GAMECON_KONSTANTY_DEFAULT: GameconKonstanty = {
 export const GAMECON_KONSTANTY = {
   ...GAMECON_KONSTANTY_DEFAULT,
   ...window.GAMECON_KONSTANTY,
-}
+};
 
 const ČAS_DEN = 24 * 60 * 60 * 1000;
 GAMECON_KONSTANTY.PROGRAM_DNY = range(GAMECON_KONSTANTY.PROGRAM_OD, GAMECON_KONSTANTY.PROGRAM_DO, ČAS_DEN).reverse();
@@ -63,4 +66,4 @@ export const initEnv = () => {
     obchod: {
     }
   };
-}
+};

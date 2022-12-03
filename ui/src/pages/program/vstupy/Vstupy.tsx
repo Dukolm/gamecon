@@ -1,13 +1,8 @@
-import { FunctionComponent } from "preact";
+import type { FunctionComponent } from "preact";
 import { useContext } from "preact/hooks";
 import { GAMECON_KONSTANTY } from "../../../env";
-import {
-  formátujDatum,
-} from "../../../utils";
-import {
-  porovnejTabulkaVýběr,
-  ProgramURLState,
-} from "../routing";
+import { formátujDatum } from "../../../utils";
+import { ProgramURLState, porovnejTabulkaVýběr } from "../routing";
 
 type ProgramUživatelskéVstupyProps = {};
 
@@ -32,7 +27,9 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
                     ? " program_den-aktivni"
                     : "")
                 }
-                onClick={() => setUrlState({ výběr: možnost })}
+                onClick={() => {
+                  setUrlState({ výběr: možnost });
+                }}
               >
                 {možnost.typ === "můj"
                   ? "můj program"

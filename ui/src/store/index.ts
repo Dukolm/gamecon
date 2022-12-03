@@ -1,7 +1,9 @@
-import create, { StateCreator } from "zustand";
-import { immer } from "zustand/middleware/immer";
+import type { ExmampleSlice } from "./example";
+import type { StateCreator } from "zustand";
+import create from "zustand";
+import { createExampleSlice } from "./example";
 import { devtools } from "zustand/middleware";
-import { createExampleSlice, ExmampleSlice } from "./example";
+import { immer } from "zustand/middleware/immer";
 
 
 type State = ExmampleSlice;

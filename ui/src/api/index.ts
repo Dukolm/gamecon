@@ -54,5 +54,5 @@ export type Aktivita = {
 
 export const fetchAktivity = async (rok: number): Promise<Aktivita[]> => {
   const url = `${GAMECON_KONSTANTY.BASE_PATH_API}aktivityProgram?${rok ? `rok=${rok}` : ""}`;
-  return fetch(url, { method: "POST" }).then(x => x.json());
-}
+  return fetch(url, { method: "POST" }).then(async x => x.json());
+};

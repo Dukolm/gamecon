@@ -5,7 +5,7 @@ export * from "./tranformace";
 export * from "./async";
 
 export const tryParseNumber = (str: string | null): number | undefined => {
-  if (!str) return;
+  if (str == null || str === "") return;
   const maybeNumber = +str;
   if (str && !Number.isNaN(maybeNumber)) return maybeNumber;
-}
+};

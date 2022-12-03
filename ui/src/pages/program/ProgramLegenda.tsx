@@ -1,4 +1,4 @@
-import { ORGANIZATOR, KONCOVKA_DLE_POHLAVÍ } from "../../api";
+import { KONCOVKA_DLE_POHLAVÍ, ORGANIZATOR } from "../../api";
 import { GAMECON_KONSTANTY } from "../../env";
 
 export const ProgramLegenda = () => {

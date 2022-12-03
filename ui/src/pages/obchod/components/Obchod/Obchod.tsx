@@ -1,4 +1,11 @@
-import { FunctionComponent, render } from "preact";
+import type { FunctionComponent } from "preact";
+import type {
+  DefiniceObchod,
+  DefiniceObchodMřížka,
+  DefiniceObchodMřížkaBuňka,
+  ObjednávkaPředmět,
+  Předmět,
+} from "../../../../api/obchod/types";
 import {
   useCallback,
   useContext,
@@ -11,13 +18,6 @@ import { Overlay } from "../../../../components/Overlay";
 import { GAMECON_KONSTANTY } from "../../../../env";
 import { ObchodMřížka } from "../ObchodMřížka";
 import { ObchodShrnutí } from "../ObchodShrnutí";
-import {
-  DefiniceObchod,
-  DefiniceObchodMřížka,
-  DefiniceObchodMřížkaBuňka,
-  ObjednávkaPředmět,
-  Předmět,
-} from "../../../../api/obchod/types";
 import { PředmětyContext } from "../../App";
 import { fetchProdej } from "../../../../api/obchod/endpoints";
 
@@ -36,16 +36,17 @@ const usePředmětyObjednávka = () => {
     setPředmětyObjednávka((předměty) =>
       předměty.some((x) => x.předmět.id === předmětId)
         ? předměty.map((x) =>
-            x.předmět.id === předmětId ? { ...x, množství: x.množství + 1 } : x
-          )
+          x.předmět.id === předmětId ? { ...x, množství: x.množství + 1 } : x
+        )
         : předmětyVšechny.some((x) => x.id === předmětId)
-        ? předměty.concat([
+          ? předměty.concat([
             {
               množství: 1,
-              předmět: předmětyVšechny.find((x) => x.id === předmětId)!,
+              // TODO: lépe napsat ať nevyžaduje přetypování
+              předmět: předmětyVšechny.find((x) => x.id === předmětId) as Předmět,
             },
           ])
-        : předměty
+          : předměty
     );
   });
   const předmětOdeber = useFixed((předmět: Předmět) => {
@@ -88,13 +89,13 @@ const useMřižka = (definice: DefiniceObchod) => {
     (x) => x.id === mřížkaId
   );
 
-  const setShrnutí = useFixed(() => setId(-1));
+  const setShrnutí = useFixed(() => { setId(-1); });
 
-  const setVýchozí = useCallback(() => setId(výchoZíMřížka), []);
+  const setVýchozí = useCallback(() => { setId(výchoZíMřížka); }, []);
 
   const setMřížka = useMemo(
     () =>
-      Object.assign((id: number) => setId(id), {
+      Object.assign((id: number) => { setId(id); }, {
         id: setId,
         zpět: setZpět,
         výchozí: setVýchozí,
@@ -108,7 +109,7 @@ const useMřižka = (definice: DefiniceObchod) => {
 
 type TObchodProps = {
   definice: DefiniceObchod;
-};
+}
 
 export const Obchod: FunctionComponent<TObchodProps> = (props) => {
   const { definice } = props;
@@ -157,17 +158,19 @@ export const Obchod: FunctionComponent<TObchodProps> = (props) => {
     setVisible(false);
   }, []);
 
-  const onPotvrdit = useCallback(async () => {
-    await fetchProdej(předměty);
-    předmětySmažVšechny();
-    setMřížka.výchozí();
-    setVisible(false);
+  const onPotvrdit = useCallback(()=>{
+    void (async () => {
+      await fetchProdej(předměty);
+      předmětySmažVšechny();
+      setMřížka.výchozí();
+      setVisible(false);
+    })();
   }, [předměty]);
 
   return (
     <>
       {visible ? (
-        <Overlay onClickOutside={() => setVisible(false)}>
+        <Overlay onClickOutside={() => { setVisible(false); }}>
           <div class="shop--container">
             {mřížka ? (
               <ObchodMřížka {...{ mřížka, onBuňkaClicked }} />

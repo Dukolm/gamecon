@@ -1,9 +1,8 @@
-
-import Preact, { FunctionComponent } from "preact";
+import type { FunctionComponent } from "preact";
 
 type TProgramWrapperProps = {
 
-};
+}
 
 /**
  * V dev serveru simuluje okolí gamecon webu pro testování programu
