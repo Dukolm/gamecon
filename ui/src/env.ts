@@ -22,6 +22,7 @@ type GameconKonstanty = {
   PROGRAM_OD: number,
   PROGRAM_DO: number,
   PROGRAM_DNY: number[],
+  PROGRAM_ŘAZENÍ_LINIE: string[],
   LEGENDA: string,
 }
 
@@ -48,6 +49,13 @@ const GAMECON_KONSTANTY_DEFAULT: GameconKonstanty = {
   PROGRAM_DO: 1658689200000,
   PROGRAM_DNY: [],
   LEGENDA: "",
+  PROGRAM_ŘAZENÍ_LINIE: [
+    "brigádnické", "workshopy", "(bez typu – organizační)",
+    "organizační výpomoc", "deskoherna", "turnaje v deskovkách",
+    "epické deskovky", "wargaming", "larpy", "RPG",
+    "mistrovství v DrD", "legendy klubu dobrodruhů",
+    "akční a bonusové aktivity", "Přednášky", "doprovodný program"
+  ],
 };
 
 export const GAMECON_KONSTANTY = {
@@ -59,7 +67,7 @@ const ČAS_DEN = 24 * 60 * 60 * 1000;
 GAMECON_KONSTANTY.PROGRAM_DNY = range(GAMECON_KONSTANTY.PROGRAM_OD, GAMECON_KONSTANTY.PROGRAM_DO, ČAS_DEN).reverse();
 
 /** Roky ve kterých se gamecon konal */
-export const ROKY = range(2009, GAMECON_KONSTANTY.ROK).filter(x=>x !== 2020);
+export const ROKY = range(2009, GAMECON_KONSTANTY.ROK).filter(x => x !== 2020);
 
 export const initEnv = () => {
   window.preactMost = {

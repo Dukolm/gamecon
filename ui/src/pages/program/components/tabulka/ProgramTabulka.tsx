@@ -5,6 +5,7 @@ import { range } from "../../../../utils";
 import { ProgramURLState } from "../../routing";
 import { ProgramPosuv } from "./ProgramPosuv";
 import { připravTabulkuAktivit, SeskupováníAktivit } from "./seskupování";
+import { GAMECON_KONSTANTY } from "../../../../env";
 
 type ProgramTabulkaProps = {
   aktivity: Aktivita[];
@@ -13,6 +14,13 @@ type ProgramTabulkaProps = {
 const ZAČÁTEK_AKTIVIT = 8;
 
 const PROGRAM_ČASY = range(ZAČÁTEK_AKTIVIT, 24);
+
+const indexŘazení = (klíč: string) => {
+  const index = GAMECON_KONSTANTY.PROGRAM_ŘAZENÍ_LINIE.findIndex(
+    (x) => x === klíč
+  );
+  return index === -1 ? 1000 : index;
+};
 
 export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
   props
@@ -53,58 +61,62 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
 
   const tabulkaŘádky = (
     <>
-      {Object.entries(předpřipravenáTabulka).map(([klíč, skupina]) => {
-        const řádků = Math.max(...skupina.map((x) => x.řádek)) + 1;
+      {Object.entries(předpřipravenáTabulka)
+        .sort((a, b) => indexŘazení(a[0]) - indexŘazení(b[0]))
+        .map(([klíč, skupina]) => {
+          const řádků = Math.max(...skupina.map((x) => x.řádek)) + 1;
 
-        return (
-          <>
-            {range(řádků).map((řádek) => {
-              const klíčSkupiny =
-                řádek === 0 ? (
-                  <td rowSpan={řádků}>
-                    <div class="program_nazevLinie">{klíč}</div>
-                  </td>
-                ) : (
-                  <></>
+          return (
+            <>
+              {range(řádků).map((řádek) => {
+                const klíčSkupiny =
+                  řádek === 0 ? (
+                    <td rowSpan={řádků}>
+                      <div class="program_nazevLinie">{klíč}</div>
+                    </td>
+                  ) : (
+                    <></>
+                  );
+
+                let posledníAktivitaDo = ZAČÁTEK_AKTIVIT;
+                return (
+                  <tr>
+                    {klíčSkupiny}
+                    {skupina
+                      .filter((x) => x.řádek === řádek)
+                      .map((x) => x.aktivita)
+                      .sort((a1, a2) => a1.cas.od - a2.cas.od)
+                      .map((aktivita) => {
+                        const hodinOd = new Date(aktivita.cas.od).getHours();
+                        const hodinDo = new Date(aktivita.cas.do).getHours();
+                        const rozsah = hodinDo - hodinOd;
+
+                        const časOdsazení = hodinOd - posledníAktivitaDo;
+                        posledníAktivitaDo = hodinDo;
+                        return (
+                          <>
+                            {range(časOdsazení).map(() => (
+                              <td></td>
+                            ))}
+                            <td colSpan={rozsah}>
+                              <div>
+                                <a class="programNahled_odkaz">
+                                  {aktivita.nazev}
+                                </a>
+                                <span class="program_obsazenost">{` (${
+                                  aktivita.obsazenost.f + aktivita.obsazenost.m
+                                }/${aktivita.obsazenost.ku})`}</span>
+                              </div>
+                            </td>
+                          </>
+                        );
+                      })}
+                  </tr>
                 );
-
-              let posledníAktivitaDo = ZAČÁTEK_AKTIVIT;
-              return (
-                <tr>
-                  {klíčSkupiny}
-                  {skupina
-                    .filter((x) => x.řádek === řádek)
-                    .map((x) => x.aktivita)
-                    .sort((a1, a2) => a1.cas.od - a2.cas.od)
-                    .map((aktivita) => {
-                      const hodinOd = new Date(aktivita.cas.od).getHours();
-                      const hodinDo = new Date(aktivita.cas.do).getHours();
-                      const rozsah = hodinDo - hodinOd;
-
-                      const časOdsazení = hodinOd - posledníAktivitaDo;
-                      posledníAktivitaDo = hodinDo;
-                      return (
-                        <>
-                          {range(časOdsazení).map(()=><td></td>)}
-                          <td colSpan={rozsah}>
-                            <div>
-                              <a class="programNahled_odkaz">
-                                {aktivita.nazev}
-                              </a>
-                              <span class="program_obsazenost">{` (${
-                                aktivita.obsazenost.f + aktivita.obsazenost.m
-                              }/${aktivita.obsazenost.ku})`}</span>
-                            </div>
-                          </td>
-                        </>
-                      );
-                    })}
-                </tr>
-              );
-            })}
-          </>
-        );
-      })}
+              })}
+            </>
+          );
+        })}
     </>
   );
 
