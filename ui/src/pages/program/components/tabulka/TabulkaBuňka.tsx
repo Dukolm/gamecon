@@ -1,9 +1,8 @@
 import { Aktivita, Obsazenost } from "../../../../api/program";
-import { useContext } from "preact/hooks";
 import { obsazenostZVolnoTyp } from "../../../../utils/tranformace";
-import { ProgramURLState } from "../../routing";
+import { useProgramStore } from "../../../../store/program";
 
-type ObsazenostProps = { obsazenost: Obsazenost }
+type ObsazenostProps = { obsazenost: Obsazenost };
 
 const ObsazenostComp = (props: ObsazenostProps) => {
   const { obsazenost } = props;
@@ -50,11 +49,10 @@ const ObsazenostComp = (props: ObsazenostProps) => {
 
 type TabulkaBuňkaProps = {
   aktivita: Aktivita;
-}
+};
 
 export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
   const { aktivita } = props;
-  const { setUrlState, urlState } = useContext(ProgramURLState);
 
   const cenaVysledna = Math.round(
     aktivita.cenaZaklad * (aktivita.slevaNasobic ?? 1)
@@ -96,9 +94,11 @@ export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
       <a
         class="title"
         title={aktivita.nazev}
-        onClick={() =>
-        { setUrlState({ ...urlState, aktivitaNáhledId: aktivita.id }); }
-        }
+        onClick={() => {
+          useProgramStore.setState((s) => {
+            s.urlState.aktivitaNáhledId = aktivita.id;
+          }, undefined, "tabulka akitvita klik");
+        }}
       >
         {aktivita.nazev.substring(0, 20)}
       </a>

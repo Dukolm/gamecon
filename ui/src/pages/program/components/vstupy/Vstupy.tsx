@@ -1,20 +1,15 @@
 import { FunctionComponent } from "preact";
-import { useContext } from "preact/hooks";
 import { GAMECON_KONSTANTY } from "../../../../env";
-import {
-  formátujDatum,
-} from "../../../../utils";
-import {
-  ProgramURLState,
-  porovnejTabulkaVýběr,
-} from "../../routing";
+import { useProgramStore } from "../../../../store/program";
+import { porovnejTabulkaVýběr } from "../../../../store/program/url";
+import { formátujDatum } from "../../../../utils";
 
-type ProgramUživatelskéVstupyProps = {}
+type ProgramUživatelskéVstupyProps = {};
 
 export const ProgramUživatelskéVstupy: FunctionComponent<
   ProgramUživatelskéVstupyProps
 > = (props) => {
-  const { možnosti, setUrlState, urlState } = useContext(ProgramURLState);
+  const urlState = useProgramStore((s) => s.urlState);
 
   const rok = GAMECON_KONSTANTY.ROK;
 
@@ -23,7 +18,7 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
       <div class="program_hlavicka">
         <h1>Program {rok}</h1>
         <div class="program_dny">
-          {možnosti.map((možnost) => {
+          {urlState.možnosti.map((možnost) => {
             return (
               <button
                 class={
@@ -32,7 +27,11 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
                     ? " program_den-aktivni"
                     : "")
                 }
-                onClick={() => { setUrlState({ výběr: možnost }); }}
+                onClick={() => {
+                  useProgramStore.setState((s) => {
+                    s.urlState.výběr = možnost;
+                  }, undefined, "nastav program den");
+                }}
               >
                 {možnost.typ === "můj"
                   ? "můj program"

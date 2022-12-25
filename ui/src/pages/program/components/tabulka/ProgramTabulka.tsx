@@ -1,13 +1,14 @@
 import { FunctionComponent } from "preact";
 import { Aktivita } from "../../../../api/program";
-import { useContext, useRef } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import { range } from "../../../../utils";
-import { ProgramURLState } from "../../routing";
 import { ProgramPosuv } from "./ProgramPosuv";
 import { připravTabulkuAktivit, SeskupováníAktivit } from "./seskupování";
 import { GAMECON_KONSTANTY } from "../../../../env";
+import { useProgramStore } from "../../../../store/program";
 
 type ProgramTabulkaProps = {
+  // TODO: aktivity v globálním stavu ?
   aktivity: Aktivita[];
 };
 
@@ -26,7 +27,7 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
   props
 ) => {
   const { aktivity } = props;
-  const { urlState } = useContext(ProgramURLState);
+  const urlState = useProgramStore(s=>s.urlState);
 
   const aktivityFiltrované = aktivity.filter((x) =>
     urlState.výběr.typ === "můj"

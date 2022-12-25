@@ -11,6 +11,8 @@ type GameconKonstanty = {
   /**
    * cesta k této stráce v rámci které se preact využívá.
    * například /web/program/
+   * preact by měl mít ve zprávě pouze část url 
+   *   následující za touto cestou
    */
   BASE_PATH_PAGE: string,
   /**

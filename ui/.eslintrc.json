@@ -103,6 +103,7 @@
     "@typescript-eslint/promise-function-async": "warn",
     "@typescript-eslint/prefer-enum-initializers": "error",
     "@typescript-eslint/switch-exhaustiveness-check": "warn",
-    "@typescript-eslint/no-unnecessary-condition": "off"
+    "@typescript-eslint/no-unnecessary-condition": "off",
+    "@typescript-eslint/unbound-method": "off"
   }
 }

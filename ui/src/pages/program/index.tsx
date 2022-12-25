@@ -1,24 +1,24 @@
-import { Aktivita} from "../../api/program";
 import { FunctionComponent } from "preact";
 import { GAMECON_KONSTANTY } from "../../env";
 import { ProgramLegenda } from "./components/ProgramLegenda";
-import { ProgramURLState, useProgramSemanticRoute } from "./routing";
 import { ProgramTabulka } from "./components/tabulka/ProgramTabulka";
 import { ProgramUživatelskéVstupy } from "./components/vstupy/Vstupy";
 
 import "./program.less";
 import { ProgramNáhled } from "./components/náhled/ProgramNáhled";
-import { useEffect, useState } from "preact/hooks";
-import { fetchAktivity } from "../../api/program";
+import { useEffect } from "preact/hooks";
+import { useProgramStore } from "../../store/program";
 
 /** část odazu od které začíná programově specifické url managované preactem */
 export const PROGRAM_URL_NAME = "program";
 
 export const Program: FunctionComponent = () => {
-  const semanticRoute = useProgramSemanticRoute();
-  const { urlState } = semanticRoute;
+  const urlState = useProgramStore(s=>s.urlState);
+  const načtiRok = useProgramStore(s=>s.načtiRok);
 
-  const [aktivity, setAktivity] = useState<Aktivita[]>([]);
+  const aktivity = useProgramStore(
+    (s) => s.data.aktivityPodleRoku[GAMECON_KONSTANTY.ROK] || []
+  );
 
   const aktivitaNáhled =
     urlState.aktivitaNáhledId !== undefined
@@ -26,22 +26,17 @@ export const Program: FunctionComponent = () => {
       : undefined;
 
   useEffect(() => {
-    void (async () => {
-      const aktivity = await fetchAktivity(GAMECON_KONSTANTY.ROK);
-      setAktivity(aktivity);
-    })();
+    void načtiRok(GAMECON_KONSTANTY.ROK);
   }, []);
 
   return (
-    <ProgramURLState.Provider value={semanticRoute}>
-      <div style={{ position: "relative" }}>
-        {aktivitaNáhled ? (
-          <ProgramNáhled aktivita={aktivitaNáhled} />
-        ) : undefined}
-        <ProgramUživatelskéVstupy />
-        <ProgramLegenda />
-        <ProgramTabulka {...{ aktivity }} />
-      </div>
-    </ProgramURLState.Provider>
+    <div style={{ position: "relative" }}>
+      {aktivitaNáhled ? (
+        <ProgramNáhled aktivita={aktivitaNáhled} />
+      ) : undefined}
+      <ProgramUživatelskéVstupy />
+      <ProgramLegenda />
+      <ProgramTabulka {...{ aktivity: aktivity }} />
+    </div>
   );
 };

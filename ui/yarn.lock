@@ -1953,11 +1953,6 @@ postcss@^8.4.13:
     picocolors "^1.0.0"
     source-map-js "^1.0.2"
 
-preact-router@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.npmjs.org/preact-router/-/preact-router-4.0.1.tgz"
-  integrity sha512-xPyHVLouc5oKIlKu9iEElplNygJYkOn/vfXfZhcoOFqzfAZHZMmT3FsQb0yyPkdt1rwTLFAxek6/5CFkofocSQ==
-
 preact@^10.5.15:
   version "10.7.2"
   resolved "https://registry.npmjs.org/preact/-/preact-10.7.2.tgz"

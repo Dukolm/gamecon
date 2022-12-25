@@ -11,7 +11,9 @@ import { renderPages } from "./pages";
 // TODO: revidovat názvosloví
 // TODO: Vytvořit zálohy node_modules pro případ nekompatabilní změny balíčku a smazání staré verze
 // TODO: github actions test na linter
-// TODO: readme: návod na práci s ui BUILDING Vývoj atd. ...
+// TODO: readme: návod na práci s ui BUILDING Vývoj atd. ..
+// TODO: script pro zálohování node_modules
+
 //         Spouštění
 //         Developement
 //          jak pracovat se zustand
