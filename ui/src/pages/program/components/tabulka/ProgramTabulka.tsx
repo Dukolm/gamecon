@@ -1,16 +1,16 @@
 import { FunctionComponent } from "preact";
-import { Aktivita } from "../../../../api/program";
 import { useRef } from "preact/hooks";
 import { range } from "../../../../utils";
 import { ProgramPosuv } from "./ProgramPosuv";
 import { připravTabulkuAktivit, SeskupováníAktivit } from "./seskupování";
 import { GAMECON_KONSTANTY } from "../../../../env";
 import { useProgramStore } from "../../../../store/program";
+import {
+  useAktivitaNáhled,
+  useAktivity,
+} from "../../../../store/program/selektory";
 
-type ProgramTabulkaProps = {
-  // TODO: aktivity v globálním stavu ?
-  aktivity: Aktivita[];
-};
+type ProgramTabulkaProps = {};
 
 const ZAČÁTEK_AKTIVIT = 8;
 
@@ -26,8 +26,10 @@ const indexŘazení = (klíč: string) => {
 export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
   props
 ) => {
-  const { aktivity } = props;
-  const urlState = useProgramStore(s=>s.urlState);
+  const {} = props;
+
+  const urlState = useProgramStore((s) => s.urlState);
+  const { aktivity, aktivityPřihlášen } = useAktivity();
 
   const aktivityFiltrované = aktivity.filter((x) =>
     urlState.výběr.typ === "můj"
@@ -91,6 +93,30 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                         const hodinOd = new Date(aktivita.cas.od).getHours();
                         const hodinDo = new Date(aktivita.cas.do).getHours();
                         const rozsah = hodinDo - hodinOd;
+                        const aktivitaPřihlášen = aktivityPřihlášen.find(
+                          (x) => x.id === aktivita.id
+                        ) ?? { id: aktivita.id };
+
+                        const classes: string[] = [];
+                        if (aktivitaPřihlášen.prihlaseno) {
+                          classes.push("prihlasen");
+                        }
+                        if (aktivitaPřihlášen.vedu) {
+                          classes.push("organizator");
+                        }
+                        // if (aktivitaPřihlášen.nahradnik) {
+                        //   classes.push("nahradnik");
+                        // }
+                        if (aktivita.vdalsiVlne) {
+                          classes.push("vDalsiVlne");
+                        }
+                        // TODO:
+                        // if (aktivita.) {
+                        //    classes.push("plno");
+                        // }
+                        if (aktivita.vBudoucnu) {
+                          classes.push("vBudoucnu");
+                        }
 
                         const časOdsazení = hodinOd - posledníAktivitaDo;
                         posledníAktivitaDo = hodinDo;
@@ -100,13 +126,32 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                               <td></td>
                             ))}
                             <td colSpan={rozsah}>
-                              <div>
-                                <a class="programNahled_odkaz">
+                              <div class={classes.join(" ")}>
+                                <a
+                                  class="programNahled_odkaz"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    useProgramStore.setState(
+                                      (s) => {
+                                        s.urlState.aktivitaNáhledId =
+                                          // TODO: pěkná pyramida -> refactor
+                                          aktivita.id;
+                                      },
+                                      undefined,
+                                      "tabulka akitvita klik"
+                                    );
+                                  }}
+                                >
                                   {aktivita.nazev}
                                 </a>
                                 <span class="program_obsazenost">{` (${
                                   aktivita.obsazenost.f + aktivita.obsazenost.m
                                 }/${aktivita.obsazenost.ku})`}</span>
+                                {(aktivitaPřihlášen.mistnost || undefined) && (
+                                  <div class="program_lokace">
+                                    {aktivitaPřihlášen.mistnost}
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </>
@@ -130,9 +175,15 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
 
   const obalRef = useRef<HTMLDivElement>(null);
 
+  const aktivitaNáhled = useAktivitaNáhled();
+
+  const programNáhledObalProgramuClass =
+    "programNahled_obalProgramu" +
+    (aktivitaNáhled ? " programNahled_obalProgramu-zuzeny" : "");
+
   return (
     <>
-      <div class="programNahled_obalProgramu">
+      <div class={programNáhledObalProgramuClass}>
         <div class="programPosuv_obal2">
           <div class="programPosuv_obal" ref={obalRef}>
             <table class="program">

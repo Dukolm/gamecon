@@ -2,6 +2,7 @@ import { ProgramDataSlice } from "./programData";
 import { createProgramDataSlice } from "./programData";
 import { createMyStore, MyStateCreator } from "../common";
 import { createProgramUrlSlice, ProgramUrlSlice } from "./url";
+import { inicializujProgramStoreSubscribe } from "./subscriptions";
 
 type ProgramState = ProgramDataSlice & ProgramUrlSlice;
 
@@ -13,3 +14,5 @@ const createState: ProgramStateCreator<ProgramState> = (...args) => ({
 });
 
 export const useProgramStore = createMyStore(createState);
+
+inicializujProgramStoreSubscribe();

@@ -1,5 +1,4 @@
 import { FunctionComponent } from "preact";
-import { GAMECON_KONSTANTY } from "../../../../env";
 import { useProgramStore } from "../../../../store/program";
 import { porovnejTabulkaVýběr } from "../../../../store/program/url";
 import { formátujDatum } from "../../../../utils";
@@ -11,12 +10,10 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
 > = (props) => {
   const urlState = useProgramStore((s) => s.urlState);
 
-  const rok = GAMECON_KONSTANTY.ROK;
-
   return (
     <>
       <div class="program_hlavicka">
-        <h1>Program {rok}</h1>
+        <h1>Program {urlState.rok}</h1>
         <div class="program_dny">
           {urlState.možnosti.map((možnost) => {
             return (

@@ -1,6 +1,5 @@
-import { Aktivita, Obsazenost } from "../../../../api/program";
+import { Aktivita, AktivitaPřihlášen, Obsazenost } from "../../../../api/program";
 import { obsazenostZVolnoTyp } from "../../../../utils/tranformace";
-import { useProgramStore } from "../../../../store/program";
 
 type ObsazenostProps = { obsazenost: Obsazenost };
 
@@ -49,33 +48,34 @@ const ObsazenostComp = (props: ObsazenostProps) => {
 
 type TabulkaBuňkaProps = {
   aktivita: Aktivita;
+  aktivitaPřihlášen: AktivitaPřihlášen;
 };
 
 export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
-  const { aktivita } = props;
+  const { aktivita,aktivitaPřihlášen } = props;
 
   const cenaVysledna = Math.round(
-    aktivita.cenaZaklad * (aktivita.slevaNasobic ?? 1)
+    aktivita.cenaZaklad * (aktivitaPřihlášen.slevaNasobic ?? 1)
   );
 
   const cenaVyslednaString =
-    aktivita.slevaNasobic === 0 || aktivita.cenaZaklad <= 0 ? (
-      <>zdarma</>
-    ) : (
-      <>
-        {(aktivita.slevaNasobic ?? 1) !== 1 ? "*" : ""}
-        {cenaVysledna}&thinsp;Kč
-      </>
-    );
+  aktivitaPřihlášen.slevaNasobic === 0 || aktivita.cenaZaklad <= 0 ? (
+    <>zdarma</>
+  ) : (
+    <>
+      {(aktivitaPřihlášen.slevaNasobic ?? 1) !== 1 ? "*" : ""}
+      {cenaVysledna}&thinsp;Kč
+    </>
+  );
 
   const classes: string[] = [];
-  if (aktivita.prihlaseno) {
+  if (aktivitaPřihlášen.prihlaseno) {
     classes.push("prihlasen");
   }
-  if (aktivita.vedu) {
+  if (aktivitaPřihlášen.vedu) {
     classes.push("organizator");
   }
-  // if (aktivita.nahradnik) {
+  // if (aktivitaPřihlášen.nahradnik) {
   //   classes.push("nahradnik");
   // }
   if (aktivita.vdalsiVlne) {
@@ -94,11 +94,6 @@ export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
       <a
         class="title"
         title={aktivita.nazev}
-        onClick={() => {
-          useProgramStore.setState((s) => {
-            s.urlState.aktivitaNáhledId = aktivita.id;
-          }, undefined, "tabulka akitvita klik");
-        }}
       >
         {aktivita.nazev.substring(0, 20)}
       </a>

@@ -8,6 +8,7 @@ const NÁHLED_QUERY_STRING = "idAktivityNahled";
 export type ProgramURLState = {
   výběr: ProgramTabulkaVýběr,
   aktivitaNáhledId?: number,
+  rok: number,
 }
 
 export type ProgramTabulkaVýběr =
@@ -26,7 +27,7 @@ export type ProgramUrlSlice = {
   },
 }
 
-export const createProgramUrlSlice: ProgramStateCreator<ProgramUrlSlice> = (set, get) => ({
+export const createProgramUrlSlice: ProgramStateCreator<ProgramUrlSlice> = () => ({
   urlState: {
     výběr: {
       typ: "den",
@@ -34,6 +35,8 @@ export const createProgramUrlSlice: ProgramStateCreator<ProgramUrlSlice> = (set,
     },
     možnosti: tabulkaMožnosti(),
     aktivitaNáhledId: undefined,
+    // TODO: přidat logiku pro rok v url
+    rok: GAMECON_KONSTANTY.ROK,
   },
 });
 
@@ -88,13 +91,13 @@ const tabulkaMožnosti = (props?: { přihlášen?: boolean }): ProgramTabulkaVý
     .concat(...((props?.přihlášen ?? false) ? [{ typ: "můj" } as ProgramTabulkaVýběr] : []));
 
 
-const nastavStateZUrl = () =>{
+export const nastavStateZUrl = () =>{
   const současnéUrl = location.href.substring(location.origin.length);
 
   nastavUrlState(současnéUrl);
 };
 
-const nastavUrlZState = () =>{
+export const nastavUrlZState = () =>{
   const současnéUrl = location.href.substring(location.origin.length);
   const novéUrl = generujUrl();
 
@@ -103,19 +106,6 @@ const nastavUrlZState = () =>{
 
   history.pushState(null, "", novéUrl);
 };
-
-
-addEventListener('popstate', () => {
-  nastavStateZUrl();
-});
-
-setTimeout(() => {
-  useProgramStore.subscribe(s=>s.urlState, (s)=>{
-    nastavUrlZState();
-  });
-}, 0);
-
-
 
 const urlZTabulkaVýběr = (výběr: ProgramTabulkaVýběr) =>
   (výběr.typ === "můj"
