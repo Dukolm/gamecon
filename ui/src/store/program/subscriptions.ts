@@ -2,6 +2,8 @@ import { useProgramStore } from ".";
 import { nastavStateZUrl, nastavUrlZState } from "./url";
 
 
+// TODO: logiku pro autofetch na začátek první vlny (nějak vizuálně komunikovat že stránka byla načtena)
+
 export const inicializujProgramStoreSubscribe = () =>{
   nastavStateZUrl();
 

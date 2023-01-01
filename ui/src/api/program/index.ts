@@ -1,5 +1,5 @@
 import { GAMECON_KONSTANTY } from "../../env";
-import { fetchTestovacíAktivity, fetchTestovacíAktivityPřihlášen } from "../../testing/fakeAPI";
+import { fetchTestovacíAktivity, fetchTestovacíAktivityPřihlášen, fetchTestovacíLoginStav } from "../../testing/fakeAPI";
 
 export type ActivityStatus =
   | "vDalsiVlne"
@@ -55,6 +55,10 @@ export type AktivitaPřihlášen = {
     vedu?: boolean,
 }
 
+export type LoginStav = {
+  organizator?: boolean,
+  přihlášen?: boolean,
+}
 
 // TODO: dotahovat zvlášť aktivity a metadata k nim (současně posílá moc velký soubor)
 
@@ -73,4 +77,11 @@ export const fetchAktivityPřihlášen = async (rok: number): Promise<AktivitaP�
   }
   const url = `${GAMECON_KONSTANTY.BASE_PATH_API}aktivityProgramPrihlasen?${rok ? `rok=${rok}` : ""}`;
   return fetch(url, { method: "POST" }).then(async x => x.json());
+};
+
+export const fetchLoginStav = async (): Promise<LoginStav> => {
+  if (GAMECON_KONSTANTY.IS_DEV_SERVER) {
+    return fetchTestovacíLoginStav();
+  }
+  return {};
 };
