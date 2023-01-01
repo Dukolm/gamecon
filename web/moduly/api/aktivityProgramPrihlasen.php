@@ -38,9 +38,9 @@ $this->bezStranky(true);
 header('Content-type: application/json');
 $config = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
-if ($_SERVER["REQUEST_METHOD"] != "POST") {
-  return;
-}
+// if ($_SERVER["REQUEST_METHOD"] != "POST") {
+//   return;
+// }
 
 $res = [];
 
@@ -52,46 +52,40 @@ foreach ($aktivity as &$a) {
   if (!$a->zacatek()) continue;
   if (!$a->viditelnaPro($u)) continue;
 
-  // TODO: opravit, padá v PrednacitaniTrait.php:93
-  // $vypraveci = array_map(function ($o) {
-  //   return $o->jmenoNick();
-  // }, $a->organizatori());
-  $stitky = array_map(function ($s) {
-    return mb_ucfirst($s);
-  }, $a->tagy());
+  $zachovat = false;
 
   $aktivitaRes = [
     'id'        =>  $a->id(),
-    'nazev'     =>  $a->nazev(),
-    'kratkyPopis' => $a->kratkyPopis(),
-    'popis'     =>  $a->popis(),
-    'obrazek'   =>  (string) $a->obrazek(),
-    // 'vypraveci' =>  $vypraveci,
-    'stitky'    =>  $stitky,
-    // TODO: cenaZaklad by měla být číslo ?
-    'cenaZaklad'      => intval($a->cenaZaklad()),
-    'casText'   =>  $a->zacatek() ? $a->zacatek()->format('G') . ':00&ndash;' . $a->konec()->format('G') . ':00' : "",
-    'cas'        =>  $a->zacatek() ? [
-      'od'         => $a->zacatek()->getTimestamp() * 1000,
-      'do'         => $a->konec()->getTimestamp() * 1000,
-    ] : null,
-    'obsazenost' =>  $a->obsazenostObj(),
-    'linie'      =>  $a->typ()->nazev(),
   ];
 
-  $vBudoucnu = $a->vBudoucnu();
-  if ($vBudoucnu)
-    $aktivitaRes['vBudoucnu'] = $vBudoucnu;
+  $prihlasen = $u && $a->prihlasen($u);
+  if ($u && $prihlasen) {
+    $aktivitaRes['prihlasen'] = $prihlasen;
+    $zachovat = true;
+  }
 
-  $vdalsiVlne = $a->vDalsiVlne();
-  if ($vdalsiVlne)
-    $aktivitaRes['vdalsiVlne'] = $vdalsiVlne;
+  $slevaNasobic = $a->slevaNasobic($u);
+  if ($slevaNasobic != 1) {
+    $aktivitaRes['slevaNasobic'] = $slevaNasobic;
+    $zachovat = true;
+  }
 
-  $probehnuta = $a->probehnuta();
-  if ($probehnuta)
-    $aktivitaRes['probehnuta'] = $probehnuta;
+  $vedu = $u && $u->organizuje($a);
+  if ($vedu) {
+    $aktivitaRes['vedu'] = $vedu;
+    $zachovat = true;
+  }
 
-  $res[] = $aktivitaRes;
+  /*
+  $nahradnik = $u && $u->prihlasenJakoNahradnikNa($a);
+  if ($nahradnik) {
+    $aktivitaRes['nahradnik'] = $nahradnik;
+    $zachovat = true;
+  }
+  */
+
+  if ($zachovat)
+    $res[] = $aktivitaRes;
 }
 
 

@@ -122,31 +122,52 @@ $zobrazitMujProgramOdkaz = isset($u);
 
 </div>
 
+<?php
+function zabalSoubor(string $cestaKSouboru): string {
+    return $cestaKSouboru . '?version=' . md5_file(ADMIN . '/' . $cestaKSouboru);
+}
+?>
+
+<link rel="stylesheet" href="<?= zabalSoubor('/../web/soubory/ui/style.css') ?>">
+
+<div id="preact-program">Program se načítá ...</div>
+<script>
+    // Konstanty předáváné do Preactu (env.ts)
+    window.GAMECON_KONSTANTY = {
+        // TODO: vygenerovat univerzální cesty
+        BASE_PATH_API: "<?= "/web/api/" ?>",
+        BASE_PATH_PAGE: "<?= "/web/program/" ?>",
+        ROK: <?= ROK ?>,
+    }
+</script>
+
+<script type="module" src="<?= zabalSoubor('/../web/soubory/ui/bundle.js') ?>"></script>
+
 <div style="height: 70px"></div>
 
 <script type="text/javascript">
-    programNahled(
-        document.querySelector('.programNahled_obalNahledu'),
-        document.querySelector('.programNahled_obalProgramu'),
-        document.querySelectorAll('.programNahled_odkaz'),
-        document.querySelectorAll('.program form > a'),
-    )
+    // programNahled(
+    //     document.querySelector('.programNahled_obalNahledu'),
+    //     document.querySelector('.programNahled_obalProgramu'),
+    //     document.querySelectorAll('.programNahled_odkaz'),
+    //     document.querySelectorAll('.program form > a'),
+    // )
 
-    zachovejScroll(
-        document.querySelectorAll('.program form > a'),
-        document.querySelector('.programPosuv_obal'),
-    )
+    // zachovejScroll(
+    //     document.querySelectorAll('.program form > a'),
+    //     document.querySelector('.programPosuv_obal'),
+    // )
 
-    programPosuv(document.querySelector('.programPosuv_obal2'))
+    // programPosuv(document.querySelector('.programPosuv_obal2'))
 
-    <?php if ($zacatekPrvniVlnyZaSekund > 0) {
-    $zacatekPrvniVlnyZaMilisekund = $zacatekPrvniVlnyZaSekund * 1000;
-    if ($zacatekPrvniVlnyZaMilisekund > 0) { ?> /*kdyby to náhodou přeteklo za 2^32 -1 */
-    if (<?= $zacatekPrvniVlnyZaMilisekund ?> <= 2147483647) {
-        setTimeout(function () {
-            location.reload()
-        }, <?= $zacatekPrvniVlnyZaMilisekund ?>)
-    }
-    <?php }
-    } ?>
+    // <?php if ($zacatekPrvniVlnyZaSekund > 0) {
+    // $zacatekPrvniVlnyZaMilisekund = $zacatekPrvniVlnyZaSekund * 1000;
+    // if ($zacatekPrvniVlnyZaMilisekund > 0) { ?> /*kdyby to náhodou přeteklo za 2^32 -1 */
+    // if (<?= $zacatekPrvniVlnyZaMilisekund ?> <= 2147483647) {
+    //     setTimeout(function () {
+    //         location.reload()
+    //     }, <?= $zacatekPrvniVlnyZaMilisekund ?>)
+    // }
+    // <?php }
+    // } ?>
 </script>

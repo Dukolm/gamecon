@@ -11,18 +11,17 @@ const renderComponent = (
   DevWrap?: FunctionComponent<{ children: JSX.Element }>
 ) => {
   const root = document.getElementById(rootId);
+  if (!root) return;
 
-  if (root) {
-    root.innerHTML = "";
-    const Wrapper =
-      GAMECON_KONSTANTY.IS_DEV_SERVER && DevWrap ? DevWrap : Fragment;
-    render(
-      <Wrapper>
-        <Component />
-      </Wrapper>,
-      root
-    );
-  }
+  root.innerHTML = "";
+  const Wrapper =
+    GAMECON_KONSTANTY.IS_DEV_SERVER && DevWrap ? DevWrap : Fragment;
+  render(
+    <Wrapper>
+      <Component />
+    </Wrapper>,
+    root
+  );
 };
 
 export const renderPages = () => {
