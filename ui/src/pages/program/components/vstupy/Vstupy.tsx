@@ -1,7 +1,8 @@
 import { FunctionComponent } from "preact";
 import { useProgramStore } from "../../../../store/program";
-import { porovnejTabulkaVýběr } from "../../../../store/program/url";
+import { generujUrl, porovnejTabulkaVýběr } from "../../../../store/program/url";
 import { formátujDatum } from "../../../../utils";
+import produce from "immer";
 
 type ProgramUživatelskéVstupyProps = {};
 
@@ -17,14 +18,20 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
         <div class="program_dny">
           {urlState.možnosti.map((možnost) => {
             return (
-              <button
+              <a
+                href={
+                  generujUrl(produce(urlState, (s) => {
+                    s.výběr = možnost;
+                  }))
+                }
                 class={
                   "program_den" +
                   (porovnejTabulkaVýběr(možnost, urlState.výběr)
                     ? " program_den-aktivni"
                     : "")
                 }
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   useProgramStore.setState((s) => {
                     s.urlState.výběr = možnost;
                   }, undefined, "nastav program den");
@@ -33,7 +40,7 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
                 {možnost.typ === "můj"
                   ? "můj program"
                   : formátujDatum(možnost.datum)}
-              </button>
+              </a>
             );
           })}
         </div>

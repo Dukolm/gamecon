@@ -41,6 +41,6 @@ export const formátujDatum = (datum: Date) => {
   // Měsíce jsou oproti dnům idexované od 0. fakt se mě neptejte proč
   const měsíc = datum.getMonth() + 1;
 
-  return `${denText} ${den}.${měsíc}`;
+  return `${denText} ${den}.${měsíc}.`;
 };
 

@@ -40,9 +40,9 @@ export const createProgramUrlSlice: ProgramStateCreator<ProgramUrlSlice> = () =>
   },
 });
 
-/** vytvoří url z aktuálního url-stavu */
-const generujUrl = (): string | undefined => {
-  const urlState = useProgramStore.getState().urlState;
+/** vytvoří url z aktuálního url-stavu nebo z předaného stavu */
+export const generujUrl = (urlStateParam?: ProgramURLState): string | undefined => {
+  const urlState = urlStateParam ?? useProgramStore.getState().urlState;
   const výběr =
     tabulkaMožnosti().find(x => porovnejTabulkaVýběr(x, urlState.výběr));
 

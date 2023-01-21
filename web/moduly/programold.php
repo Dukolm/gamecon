@@ -1,4 +1,5 @@
 <?php
+// TODO: smazat tenhle file
 
 use \Gamecon\Cas\DateTimeCz;
 
@@ -42,12 +43,28 @@ $program->zpracujPost($u);
 foreach ($program->cssUrls() as $cssUrl) {
     $this->pridejCssUrl($cssUrl);
 }
+$this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-nahled/program-nahled.js');
+$this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-posuv/program-posuv.js');
+$this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/_spolecne/zachovej-scroll.js');
 
 $zacatekPrvniVlnyOd       = \Gamecon\Cas\DateTimeGamecon::zacatekPrvniVlnyOd();
 $zacatekPrvniVlnyZaSekund = $zacatekPrvniVlnyOd->getTimestamp() - time();
 
 $legendaText   = Stranka::zUrl('program-legenda-text')->html();
 $jeOrganizator = isset($u) && $u && $u->maPravo(P_ORG_AKTIVIT);
+
+// pomocná funkce pro zobrazení aktivního odkazu
+$aktivni = function ($urlOdkazu) use ($url, $alternativniUrl) {
+    $cssTridy = 'program_den';
+
+    if ($urlOdkazu == $url->cela() || $urlOdkazu == $alternativniUrl) {
+        $cssTridy .= ' program_den-aktivni';
+    }
+
+    return 'href="' . $urlOdkazu . '" class="' . $cssTridy . '"';
+};
+
+$zobrazitMujProgramOdkaz = isset($u);
 
 ?>
 
@@ -58,27 +75,59 @@ $jeOrganizator = isset($u) && $u && $u->maPravo(P_ORG_AKTIVIT);
     }
 </style>
 
+<!-- relativní obal kvůli náhledu -->
+<div style="position: relative">
+
+    <?php require __DIR__ . '/../soubory/blackarrow/program-nahled/program-nahled.html'; ?>
+
+    <div class="program_hlavicka">
+        <?php if ($u) { ?>
+            <!-- zatim nefunguje            <a href="program-k-tisku" class="program_tisk" target="_blank">Můj program v PDF</a>-->
+        <?php } ?>
+        <h1>Program <?= ROK ?></h1>
+        <div class="program_dny">
+            <?php foreach ($dny as $denSlug => $den) { ?>
+                <a <?= $aktivni('programold/' . $denSlug) ?>><?= $den->format('l d.n.') ?></a>
+            <?php } ?>
+            <?php if ($zobrazitMujProgramOdkaz) { ?>
+                <a <?= $aktivni('programold/muj') ?>>můj program</a>
+            <?php } ?>
+        </div>
+    </div>
+
+    <div class="program_legenda">
+
+        <div class="informaceSpustime"><?= $legendaText ?></div>
+
+        <div class="program_legenda_inner">
+            <span class="program_legenda_typ">Otevřené</span>
+            <span class="program_legenda_typ vDalsiVlne">V další vlně</span>
+            <span class="program_legenda_typ vBudoucnu">Připravujeme</span>
+            <span class="program_legenda_typ sledujici">Sleduji</span>
+            <span class="program_legenda_typ prihlasen">Přihlášen<?= $u ? $u->koncovkaDlePohlavi() : '' ?></span>
+            <span class="program_legenda_typ plno">Plno</span>
+            <?php if ($jeOrganizator) { ?>
+                <span class="program_legenda_typ organizator">organizuji</span>
+            <?php } ?>
+        </div>
+    </div>
+
+
+    <div class="programNahled_obalProgramu">
+        <div class="programPosuv_obal2">
+            <div class="programPosuv_obal">
+                <?php $program->tisk(); ?>
+            </div>
+        </div>
+    </div>
+
+</div>
 
 <?php
 function zabalSoubor(string $cestaKSouboru): string {
     return $cestaKSouboru . '?version=' . md5_file(ADMIN . '/' . $cestaKSouboru);
 }
 ?>
-
-<link rel="stylesheet" href="<?= zabalSoubor('/../web/soubory/ui/style.css') ?>">
-
-<div id="preact-program">Program se načítá ...</div>
-<script>
-    // Konstanty předáváné do Preactu (env.ts)
-    window.GAMECON_KONSTANTY = {
-        // TODO: vygenerovat univerzální cesty
-        BASE_PATH_API: "<?= "/web/api/" ?>",
-        BASE_PATH_PAGE: "<?= "/web/program/" ?>",
-        ROK: <?= ROK ?>,
-    }
-</script>
-
-<script type="module" src="<?= zabalSoubor('/../web/soubory/ui/bundle.js') ?>"></script>
 
 <div style="height: 70px"></div>
 
