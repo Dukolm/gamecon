@@ -66,14 +66,12 @@ export const generujUrl = (urlStateParam?: ProgramURLState): string | undefined 
 /** nastaví url a url-stav na hodnotu */
 const nastavUrlState = (url: string) => {
   useProgramStore.setState(s => {
-    const urlObj = new URL(url, "http://gamecon.cz");
+    const basePath = new URL(GAMECON_KONSTANTY.BASE_PATH_PAGE).pathname;
+    const urlObj = new URL(url, GAMECON_KONSTANTY.BASE_PATH_PAGE);
     const nahledIdStr = tryParseNumber(urlObj.searchParams.get(NÁHLED_QUERY_STRING));
     s.urlState.aktivitaNáhledId = nahledIdStr;
 
-    if (!(url + "/").startsWith(GAMECON_KONSTANTY.BASE_PATH_PAGE))
-      console.error(`invalid base path BASE_PATH_PAGE= ${GAMECON_KONSTANTY.BASE_PATH_PAGE} current path= ${url}`);
-
-    const den = urlObj.pathname.substring(GAMECON_KONSTANTY.BASE_PATH_PAGE.length);
+    const den = urlObj.pathname.slice(basePath.length);
 
     const výběr = tabulkaMožnosti().find(x => urlZTabulkaVýběr(x) === den);
     if (výběr)
@@ -92,13 +90,11 @@ const tabulkaMožnosti = (props?: { přihlášen?: boolean }): ProgramTabulkaVý
 
 
 export const nastavStateZUrl = () =>{
-  const současnéUrl = location.href.substring(location.origin.length);
-
-  nastavUrlState(současnéUrl);
+  nastavUrlState(location.href);
 };
 
 export const nastavUrlZState = () =>{
-  const současnéUrl = location.href.substring(location.origin.length);
+  const současnéUrl = location.href;
   const novéUrl = generujUrl();
 
   /** stavy jsou ekvivalentní, netřeba cokoliv měnit */

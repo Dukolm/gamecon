@@ -9,6 +9,8 @@ import {
   useAktivitaNáhled,
   useAktivity,
 } from "../../../../store/program/selektory";
+import { generujUrl } from "../../../../store/program/url";
+import produce from "immer";
 
 type ProgramTabulkaProps = {};
 
@@ -128,6 +130,11 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                             <td colSpan={rozsah}>
                               <div class={classes.join(" ")}>
                                 <a
+                                  href={
+                                    generujUrl(produce(urlState, (s) => {
+                                      s.aktivitaNáhledId = aktivita.id;
+                                    }))
+                                  }
                                   class="programNahled_odkaz"
                                   onClick={(e) => {
                                     e.preventDefault();

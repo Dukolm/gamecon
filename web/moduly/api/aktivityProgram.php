@@ -66,7 +66,7 @@ foreach ($aktivity as &$a) {
     'kratkyPopis' => $a->kratkyPopis(),
     'popis'     =>  $a->popis(),
     'obrazek'   =>  (string) $a->obrazek(),
-    'vypraveci' =>  $vypraveci,
+    // 'vypraveci' =>  $vypraveci,
     'stitky'    =>  $stitky,
     // TODO: cenaZaklad by měla být číslo ?
     'cenaZaklad'      => intval($a->cenaZaklad()),
