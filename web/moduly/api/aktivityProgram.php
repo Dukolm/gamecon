@@ -64,7 +64,7 @@ foreach ($aktivity as &$a) {
     'id'        =>  $a->id(),
     'nazev'     =>  $a->nazev(),
     'kratkyPopis' => $a->kratkyPopis(),
-    'popis'     =>  $a->popis(),
+    // 'popis'     =>  $a->popis(),
     'obrazek'   =>  (string) $a->obrazek(),
     // 'vypraveci' =>  $vypraveci,
     'stitky'    =>  $stitky,

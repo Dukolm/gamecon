@@ -75,6 +75,7 @@ function zabalSoubor(string $cestaKSouboru): string {
         BASE_PATH_API: "<?= URL_WEBU . "/api/" ?>",
         BASE_PATH_PAGE: "<?= URL_WEBU . "/program/" ?>",
         ROK: <?= ROK ?>,
+        LEGENDA: <?= json_encode($legendaText) ?>,
     }
 </script>
 
