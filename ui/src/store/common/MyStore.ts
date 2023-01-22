@@ -3,6 +3,7 @@ import create from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { subscribeWithSelector } from "zustand/middleware";
+import { GAMECON_KONSTANTY } from "../../env";
 
 export type ZustandMutators = [
   ["zustand/subscribeWithSelector", never],
@@ -16,6 +17,8 @@ export type MyStateCreator<State, T> = StateCreator<State, ZustandMutators, [], 
 // TODO: funguje devtools i v produkci ? zařídit aby nejelo (pravďepodobně pomocí druhého argumentu devtools funkce)
 export const createMyStore = <State>(createState: MyStateCreator<State, State>) =>
   create<State>()(
-    subscribeWithSelector(devtools(immer((...args) => ({ ...createState(...args) }))))
+    subscribeWithSelector(devtools(immer((...args) => ({ ...createState(...args) })), {
+      enabled: GAMECON_KONSTANTY.IS_DEV_SERVER || GAMECON_KONSTANTY.FORCE_REDUX_DEVTOOLS
+    }))
   );
 

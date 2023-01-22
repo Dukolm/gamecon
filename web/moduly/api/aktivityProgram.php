@@ -75,7 +75,6 @@ foreach ($aktivity as &$a) {
       'od'         => $a->zacatek()->getTimestamp() * 1000,
       'do'         => $a->konec()->getTimestamp() * 1000,
     ] : null,
-    'obsazenost' =>  $a->obsazenostObj(),
     'linie'      =>  $a->typ()->nazev(),
   ];
 
@@ -90,6 +89,14 @@ foreach ($aktivity as &$a) {
   $probehnuta = $a->probehnuta();
   if ($probehnuta)
     $aktivitaRes['probehnuta'] = $probehnuta;
+
+  $jeBrigadnicka = $a->jeBrigadnicka();
+  if ($jeBrigadnicka)
+    $aktivitaRes['jeBrigadnicka'] = $jeBrigadnicka;
+
+  $dite = $a->detiIds();
+  if ($dite && count($dite))
+    $aktivitaRes['dite'] = $dite;
 
   $res[] = $aktivitaRes;
 }

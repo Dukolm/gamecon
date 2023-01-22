@@ -6,7 +6,7 @@ export const ProgramLegenda = () => {
   const uživatel = useProgramStore(s => s.přihlášenýUživatel.data);
 
   const organizator = uživatel.organizator ?? false;
-  const koncovkaDlePohlaví = uživatel.koncovkaDlePohlaví ?? "";
+  const koncovkaDlePohlaví = uživatel.koncovkaDlePohlavi ?? "";
   const přihlášen = uživatel.prihlasen ?? false;
 
   return (

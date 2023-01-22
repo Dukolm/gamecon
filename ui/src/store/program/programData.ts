@@ -13,7 +13,10 @@ export type ProgramDataSlice = {
     },
     aktivityPodleId: {
       [id: number]: Aktivita,
-    }
+    },
+    aktivityPřihlášenPodleId: {
+      [id: number]: AktivitaPřihlášen,
+    },
   }
   /** Pokud ještě není dotažený tak dotáhne rok, příhlášen se dotahuje vždy */
   načtiRok(rok: number, načtiZnova?: boolean): Promise<void>;
@@ -24,12 +27,16 @@ export const createProgramDataSlice: ProgramStateCreator<ProgramDataSlice> = (se
     aktivityPodleRoku: {},
     aktivityPřihlášenPodleRoku: {},
     aktivityPodleId: {},
+    aktivityPřihlášenPodleId: {},
   },
   async načtiRok(rok: number, načtiZnova = false) {
     const aktivityPřihlášen = await fetchAktivityPřihlášen(rok);
 
     set(s => {
       s.data.aktivityPřihlášenPodleRoku[rok] = aktivityPřihlášen;
+      for (const aktivita of aktivityPřihlášen) {
+        s.data.aktivityPřihlášenPodleId[aktivita.id] = aktivita;
+      }
     }, undefined, "dotažení přihlášen-aktivity");
 
     const dotaženo = !!get().data.aktivityPodleRoku[rok];

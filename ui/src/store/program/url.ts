@@ -64,7 +64,19 @@ export const generujUrl = (urlStateParam?: ProgramURLState): string | undefined 
 // TODO: vyextrahovat logiku parsování a genrevoání url do souboru zvlášť
 // TODO: lepší přístup parsování a generování url
 /** nastaví url a url-stav na hodnotu */
-const nastavUrlState = (url: string) => {
+const nastavUrlState = GAMECON_KONSTANTY.IS_DEV_SERVER ? (url: string) => {
+  useProgramStore.setState(s => {
+    const urlObj = new URL(url);
+    const nahledIdStr = tryParseNumber(urlObj.searchParams.get(NÁHLED_QUERY_STRING));
+    s.urlState.aktivitaNáhledId = nahledIdStr;
+
+    const den = urlObj.pathname;
+
+    const výběr = tabulkaMožnosti().find(x => urlZTabulkaVýběr(x) === den);
+    if (výběr)
+      s.urlState.výběr = výběr;
+  }, undefined, "DEV nastavUrlState");
+} : (url: string) => {
   useProgramStore.setState(s => {
     const basePath = new URL(GAMECON_KONSTANTY.BASE_PATH_PAGE).pathname;
     const urlObj = new URL(url, GAMECON_KONSTANTY.BASE_PATH_PAGE);

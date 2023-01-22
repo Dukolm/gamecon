@@ -14,12 +14,34 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
   return;
 }
 
+
+
 $res = [];
 
 if ($u) {
   $res["prihlasen"] = true;
-  $res["organizator"] = $u->jeOrganizator();
-  
+  $res["pohlavi"] = $u->pohlavi();
+  $res["koncovkaDlePohlavi"] = $u->koncovkaDlePohlavi();
+
+  if ($u->jeOrganizator()) {
+    $res["organizator"] = true;
+  }
+  if ($u->jeBrigadnik()) {
+    $res["brigadnik"] = true;
+  }
+
+  $res["gcStav"] = "nepřihlášen";
+
+  if ($u->gcPrihlasen()) {
+    $res["gcStav"] = "přihlášen";
+  } 
+  if ($u->gcPritomen()) {
+    $res["gcStav"] = "přítomen";
+  }
+  if ($u->gcOdjel()) {
+    $res["gcStav"] = "odjel";
+  }
+
 }
 
 echo json_encode($res, $config);

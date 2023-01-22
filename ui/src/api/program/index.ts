@@ -7,7 +7,17 @@ export type ActivityStatus =
   | "plno"
   | "prihlasen"
   | "nahradnik"
-  | "organizator";
+  | "organizator"
+  ;
+
+export type StavPřihlášení =
+  | "prihlasen"
+  | "prihlasenADorazil"
+  | "dorazilJakoNahradnik"
+  | "prihlasenAleNedorazil"
+  | "pozdeZrusil"
+  | "sledujici"
+  ;
 
 export type Obsazenost = {
   m: number,
@@ -34,25 +44,33 @@ export type Aktivita = {
   cenaZaklad: number,
   casText: string,
   cas: OdDo,
-  obsazenost: Obsazenost,
   linie: string,
   vBudoucnu?: boolean,
   vdalsiVlne?: boolean,
   probehnuta?: boolean,
+  jeBrigadnicka?: boolean,
+  /** idčka */
+  dite?: number[],
+  tymova?: boolean,
 }
 
 export type AktivitaPřihlášen = {
-    id: number,
-    /** uživatelská vlastnost */
-    prihlaseno?: boolean,
-    /** uživatelská vlastnost */
-    slevaNasobic?: number,
-    // /** uživatelská vlastnost */
-    // nahradnik?: boolean,
-    /** orgovská vlastnost */
-    mistnost?: string,
-    /** orgovská vlastnost */
-    vedu?: boolean,
+  id: number,
+  obsazenost: Obsazenost,
+  /** uživatelská vlastnost */
+  prihlaseno?: boolean,
+  /** V jakém stavu je pokud je přihlášen */
+  stavPrihlaseni?: StavPřihlášení,
+  /** uživatelská vlastnost */
+  slevaNasobic?: number,
+  // nahradnik?: boolean,
+  /** orgovská vlastnost */
+  mistnost?: string,
+  /** orgovská vlastnost */
+  vedu?: boolean,
+  zamcena?: boolean,
+  prihlasovatelna?: boolean,
+  sleduju?: boolean,
 }
 
 // TODO: dotahovat zvlášť aktivity a metadata k nim (současně posílá moc velký soubor)

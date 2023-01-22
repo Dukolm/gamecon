@@ -5,6 +5,7 @@
 
 use Gamecon\Cas\DateTimeCz;
 use Gamecon\Aktivita\Aktivita;
+use Gamecon\Aktivita\StavPrihlaseni;
 
 $u = Uzivatel::zSession();
 
@@ -52,8 +53,6 @@ foreach ($aktivity as &$a) {
   if (!$a->zacatek()) continue;
   if (!$a->viditelnaPro($u)) continue;
 
-  $zachovat = false;
-
   $aktivitaRes = [
     'id'        =>  $a->id(),
   ];
@@ -61,20 +60,49 @@ foreach ($aktivity as &$a) {
   $prihlasen = $u && $a->prihlasen($u);
   if ($u && $prihlasen) {
     $aktivitaRes['prihlasen'] = $prihlasen;
-    $zachovat = true;
+
+    $stav = $this->stavPrihlaseni($u);
+    if (StavPrihlaseni::PRIHLASEN) $aktivitaRes['stavPrihlaseni'] = 'prihlasen';
+    if (StavPrihlaseni::PRIHLASEN_A_DORAZIL) $aktivitaRes['stavPrihlaseni'] = 'prihlasenADorazil';
+    if (StavPrihlaseni::DORAZIL_JAKO_NAHRADNIK) $aktivitaRes['stavPrihlaseni'] = 'dorazilJakoNahradnik';
+    if (StavPrihlaseni::PRIHLASEN_ALE_NEDORAZIL) $aktivitaRes['stavPrihlaseni'] = 'prihlasenAleNedorazil';
+    if (StavPrihlaseni::POZDE_ZRUSIL) $aktivitaRes['stavPrihlaseni'] = 'pozdeZrusil';
+    if (StavPrihlaseni::SLEDUJICI) $aktivitaRes['stavPrihlaseni'] = 'sledujici';
   }
 
   $slevaNasobic = $a->slevaNasobic($u);
   if ($slevaNasobic != 1) {
     $aktivitaRes['slevaNasobic'] = $slevaNasobic;
-    $zachovat = true;
   }
 
   $vedu = $u && $u->organizuje($a);
   if ($vedu) {
     $aktivitaRes['vedu'] = $vedu;
-    $zachovat = true;
   }
+
+  // TODO: argumenty pro admin
+  $prihlasovatelna = $a->prihlasovatelna();
+  if ($prihlasovatelna) {
+    $aktivitaRes['prihlasovatelna'] = $prihlasovatelna;
+  }
+
+  $zamcena = $a->zamcena();
+  if ($prihlasovatelna) {
+    $aktivitaRes['zamcena'] = $zamcena;
+  }
+
+  $aktivitaRes['obsazenost'] = $a->obsazenostObj();
+
+  $tymova = $a->tymova();
+  if ($tymova) {
+    $aktivitaRes['tymova'] = $tymova;
+  }
+
+  $sleduju = $u->prihlasenJakoSledujici($a);
+  if ($sleduju) {
+    $aktivitaRes['sleduju'] = $sleduju;
+  }
+
 
   /*
   $nahradnik = $u && $u->prihlasenJakoNahradnikNa($a);
@@ -84,8 +112,7 @@ foreach ($aktivity as &$a) {
   }
   */
 
-  if ($zachovat)
-    $res[] = $aktivitaRes;
+  $res[] = $aktivitaRes;
 }
 
 

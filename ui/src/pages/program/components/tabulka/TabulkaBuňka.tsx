@@ -1,5 +1,5 @@
 import { Aktivita, AktivitaPřihlášen, Obsazenost } from "../../../../api/program";
-import { obsazenostZVolnoTyp } from "../../../../utils/tranformace";
+import { volnoTypZObsazenost } from "../../../../utils/tranformace";
 
 type ObsazenostProps = { obsazenost: Obsazenost };
 
@@ -11,7 +11,7 @@ const ObsazenostComp = (props: ObsazenostProps) => {
   const kc = ku + km + kf;
 
   if (kc !== 0)
-    switch (obsazenostZVolnoTyp(obsazenost)) {
+    switch (volnoTypZObsazenost(obsazenost)) {
       case "u":
       case "x":
         return (

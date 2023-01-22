@@ -31,7 +31,7 @@ export const getFiltredActivities = (activity: Aktivita[], linie: string[], tagy
   // .filter(x => x.cas.den === denVyber)
 };
 
-export const obsazenostZVolnoTyp = (obsazenost: Obsazenost) => {
+export const volnoTypZObsazenost = (obsazenost: Obsazenost) => {
   const { m, f, km, kf, ku } = obsazenost;
   const c = m + f;
   const kc = ku + km + kf;

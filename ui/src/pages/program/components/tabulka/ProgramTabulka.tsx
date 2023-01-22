@@ -11,6 +11,7 @@ import {
 } from "../../../../store/program/selektory";
 import { generujUrl } from "../../../../store/program/url";
 import produce from "immer";
+import { Přihlašovátko } from "./Přihlašovátko";
 
 type ProgramTabulkaProps = {};
 
@@ -154,6 +155,7 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                                 <span class="program_obsazenost">{` (${
                                   aktivita.obsazenost.f + aktivita.obsazenost.m
                                 }/${aktivita.obsazenost.ku})`}</span>
+                                <Přihlašovátko akitivitaId={aktivita.id} />
                                 {(aktivitaPřihlášen.mistnost || undefined) && (
                                   <div class="program_lokace">
                                     {aktivitaPřihlášen.mistnost}

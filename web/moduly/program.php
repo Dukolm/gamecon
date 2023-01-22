@@ -76,6 +76,7 @@ function zabalSoubor(string $cestaKSouboru): string {
         BASE_PATH_PAGE: "<?= URL_WEBU . "/program/" ?>",
         ROK: <?= ROK ?>,
         LEGENDA: <?= json_encode($legendaText) ?>,
+        FORCE_REDUX_DEVTOOLS: <?= defined("FORCE_REDUX_DEVTOOLS") ? "true" : "false" ?>,
     }
 </script>
 
@@ -98,14 +99,14 @@ function zabalSoubor(string $cestaKSouboru): string {
 
     // programPosuv(document.querySelector('.programPosuv_obal2'))
 
-    // <?php if ($zacatekPrvniVlnyZaSekund > 0) {
+    // < ?php if ($zacatekPrvniVlnyZaSekund > 0) {
     // $zacatekPrvniVlnyZaMilisekund = $zacatekPrvniVlnyZaSekund * 1000;
     // if ($zacatekPrvniVlnyZaMilisekund > 0) { ?> /*kdyby to náhodou přeteklo za 2^32 -1 */
-    // if (<?= $zacatekPrvniVlnyZaMilisekund ?> <= 2147483647) {
+    // if (< ?= $zacatekPrvniVlnyZaMilisekund ?> <= 2147483647) {
     //     setTimeout(function () {
     //         location.reload()
-    //     }, <?= $zacatekPrvniVlnyZaMilisekund ?>)
+    //     }, < ?= $zacatekPrvniVlnyZaMilisekund ?>)
     // }
-    // <?php }
+    // < ?php }
     // } ?>
 </script>
