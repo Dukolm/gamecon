@@ -13,6 +13,7 @@ define('REACT_V_PROHLIZECI', true);
 define('AUTOMATICKE_SESTAVENI', true);
 define('BABEL_BINARKA', null);
 
+if (!defined('ROK')) define('ROK', 2022); // Na Betě ještě chvíli udržíme loňský ročník
 // ruční spuštění registrace na betě
 define('REG_GC_OD', '2000-01-01 00:00:00');
 define('REG_AKTIVIT_OD', '2000-01-01 00:00:00');
