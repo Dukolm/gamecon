@@ -28,3 +28,6 @@ define('REG_AKTIVIT_OD', '2000-01-01 00:00:00');
 @define('PRODEJ_JIDLA_POZASTAVEN', false);
 
 @define('MAILY_DO_SOUBORU', __DIR__ . '/../cache/private/maily.log');
+
+error_reporting(-1);
+ini_set('display_errors', '1');
