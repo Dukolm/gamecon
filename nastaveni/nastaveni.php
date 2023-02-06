@@ -73,9 +73,10 @@ if (!defined('REG_GC_DO')) define('REG_GC_DO', GC_BEZI_DO); // ukončení možno
 if (!defined('REG_AKTIVIT_OD')) define('REG_AKTIVIT_OD', DateTimeGamecon::zacatekPrvniVlnyOd(ROK)->formatDb()); // spuštění možnosti registrace na aktivity, pokud jsou aktivované 1. vlna
 if (!defined('REG_AKTIVIT_DO')) define('REG_AKTIVIT_DO', GC_BEZI_DO); // ukončení možnosti registrace na aktivity
 // 2022-06-30 23:59:00
-if (!defined('HROMADNE_ODHLASOVANI')) define('HROMADNE_ODHLASOVANI' /* a začátek třetí vlny */, DateTimeGamecon::prvniHromadneOdhlasovaniOd(ROK)->formatDb()); // datum hromadného odhlašování neplatičů
+if (!defined('HROMADNE_ODHLASOVANI_1')) define('HROMADNE_ODHLASOVANI_1' /* a začátek třetí vlny */, DateTimeGamecon::prvniHromadneOdhlasovaniOd(ROK)->formatDb()); // datum hromadného odhlašování neplatičů
 // 2022-07-17 23:59:00
 if (!defined('HROMADNE_ODHLASOVANI_2')) define('HROMADNE_ODHLASOVANI_2', DateTimeGamecon::druheHromadneOdhlasovaniOd(ROK)->formatDb()); // datum druhého hromadného odhlašování neplatičů
+if (!defined('HROMADNE_ODHLASOVANI_3')) define('HROMADNE_ODHLASOVANI_3', DateTimeGamecon::tretiHromadneOdhlasovaniOd(ROK)->formatDb()); // datum druhého hromadného odhlašování neplatičů
 
 // 2022-07-13 00:00:00
 if (!defined('PROGRAM_OD')) define('PROGRAM_OD', DateTimeGamecon::zacatekProgramu(ROK)->formatDb()); // první den programu
