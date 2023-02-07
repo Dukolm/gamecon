@@ -46,28 +46,38 @@ if (post('pridatPotvrzeniProtiCovidu')) {
 }
 
 if (po(GC_BEZI_DO)) {
-    $t->assign('rok', ROK + 1);
+    if ($u && $u->gcPritomen()) {
+        $t->parse('prihlaskaPo.ucastnilSe');
+    } else {
+        $t->assign('rok', ROK + 1);
+        $t->parse('prihlaskaPo.neucastnilSe');
+    }
     $t->parse('prihlaskaPo');
     return;
 }
 
-if (GC_BEZI || ($u && $u->gcPritomen())) {
-    // zpřístupnit varianty mimo registraci i pro nepřihlášeného uživatele kvůli
-    // příchodům z titulky, menu a podobně
-    if (VYZADOVANO_COVID_POTVRZENI && $u) {
-        $t->assign('covidSekce', $covidSekceFunkce(new Shop($u, null, $systemoveNastaveni)));
-        $t->parse('prihlaskaUzavrena.covidSekce.doklad');
-        $letosniRok = (int)date('Y');
-        if (!$u->maNahranyDokladProtiCoviduProRok($letosniRok) && !$u->maOverenePotvrzeniProtiCoviduProRok($letosniRok)) {
-            $t->parse('prihlaskaUzavrena.covidSekce.submit');
-        }
-        $t->parse('prihlaskaUzavrena.covidSekce');
+if (VYZADOVANO_COVID_POTVRZENI && $u && (GC_BEZI || $u->gcPritomen())) {
+    $t->assign('covidSekce', $covidSekceFunkce(new Shop($u, null, $systemoveNastaveni)));
+    $t->parse('prihlaskaUzavrena.covidSekce.doklad');
+    $letosniRok = (int)date('Y');
+    if (!$u->maNahranyDokladProtiCoviduProRok($letosniRok) && !$u->maOverenePotvrzeniProtiCoviduProRok($letosniRok)) {
+        $t->parse('prihlaskaUzavrena.covidSekce.submit');
     }
-    if (GC_BEZI) {
-        $t->parse('prihlaskaUzavrena.gcBezi');
-    } else {
+    $t->parse('prihlaskaUzavrena.covidSekce');
+}
+
+if (GC_BEZI) {
+    if ($u?->gcPritomen()) {
         $t->parse('prihlaskaUzavrena.proselInfopultem');
+        $t->parse('prihlaskaUzavrena');
+        return;
     }
+    if ($u?->gcPrihlasen()) {
+        $t->parse('prihlaskaUzavrena.neproselInfopultem');
+        $t->parse('prihlaskaUzavrena');
+        return;
+    }
+    $t->parse('prihlaskaUzavrena.gcBezi');
     $t->parse('prihlaskaUzavrena');
     return;
 }
@@ -79,7 +89,9 @@ if (!$u) {
 }
 
 if (pred(REG_GC_OD)) {
-    $t->assign('zacatek', (new DateTimeCz(REG_GC_OD))->format('j. n. \v\e H:i'));
+    $t->assign('zacatek', ROK < date('Y')
+        ? '(upřesníme)' // ještě jsme nepřeklopili ročník
+        : DateTimeGamecon::zacatekRegistraciUcastniku()->formatCasZacatekUdalosti());
     $t->parse('prihlaskaPred');
     return;
 }
