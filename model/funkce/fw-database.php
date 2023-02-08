@@ -66,7 +66,18 @@ function dbRollback() {
  */
 function dbConnect($selectDb = true, bool $reconnect = false, int $rok = ROK): \mysqli {
     global $spojeni;
+
+    if ($reconnect && $spojeni) {
+        mysqli_close($spojeni);
+        $spojeni = null;
+    }
+
+    if ($spojeni instanceof mysqli) {
+        return $spojeni;
+    }
+
     $stareSpojeni = $spojeni;
+
     $noveSpojeni = _dbConnect(
         DB_SERV,
         DB_USER,
@@ -75,19 +86,34 @@ function dbConnect($selectDb = true, bool $reconnect = false, int $rok = ROK): \
         $selectDb ? DB_NAME : null,
         $reconnect
     );
+
     if ($noveSpojeni && $stareSpojeni !== $noveSpojeni) {
         dbQuery('SET @rocnik = IF(@rocnik IS NOT NULL, @rocnik, $0)', $rok, $noveSpojeni);
     }
     return $noveSpojeni;
 }
 
+/**
+ * @param bool $selectDb if database should be selected on connect or not
+ * @throws ConnectionException
+ */
+function dbConnectForAlterStructure($selectDb = true) {
+    return _dbConnect(
+        DBM_SERV,
+        DBM_USER,
+        DBM_PASS,
+        defined('DBM_PORT') ? DBM_PORT : null,
+        $selectDb ? DBM_NAME : null
+    );
+}
+
 function dbConnectionAnonymDb(): mysqli {
-    $connection = mysqli_connect(
+    $connection = _dbConnect(
         DB_ANONYM_SERV,
         DB_ANONYM_USER,
         DB_ANONYM_PASS,
-        null,
-        defined('DB_ANONYM_PORT') ? (int)DB_ANONYM_PORT : null
+        defined('DB_ANONYM_PORT') ? (int)DB_ANONYM_PORT : null,
+        null
     );
     $dbAnonym   = DB_ANONYM_NAME;
     $result     = mysqli_query(
@@ -113,18 +139,7 @@ function dbConnectionAnonymDb(): mysqli {
  * @throws ConnectionException
  */
 function _dbConnect(string $dbHost, string $dbUser, string $dbPass, ?int $dbPort, ?string $dbName, bool $reconnect = false) {
-    global $spojeni;
-
-    if ($reconnect && $spojeni) {
-        mysqli_close($spojeni);
-        $spojeni = null;
-    }
-
     dbDisconnectOnShutdown();
-
-    if ($spojeni instanceof mysqli) {
-        return $spojeni;
-    }
 
     try {
         // persistent connection
