@@ -1,7 +1,5 @@
-import { useContext } from "preact/hooks";
-import { Aktivita, Obsazenost } from "../../../../api/program";
-import { obsazenostZVolnoTyp } from "../../../../utils/tranformace";
-import { ProgramURLState } from "../../routing";
+import { Aktivita, AktivitaPřihlášen, Obsazenost } from "../../../../api/program";
+import { volnoTypZObsazenost } from "../../../../utils/tranformace";
 
 type ObsazenostProps = { obsazenost: Obsazenost };
 
@@ -13,7 +11,7 @@ const ObsazenostComp = (props: ObsazenostProps) => {
   const kc = ku + km + kf;
 
   if (kc !== 0)
-    switch (obsazenostZVolnoTyp(obsazenost)) {
+    switch (volnoTypZObsazenost(obsazenost)) {
       case "u":
       case "x":
         return (
@@ -50,36 +48,36 @@ const ObsazenostComp = (props: ObsazenostProps) => {
 
 type TabulkaBuňkaProps = {
   aktivita: Aktivita;
+  aktivitaPřihlášen: AktivitaPřihlášen;
 };
 
 export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
-  const { aktivita } = props;
-  const { setUrlState, urlState } = useContext(ProgramURLState);
+  const { aktivita,aktivitaPřihlášen } = props;
 
   const cenaVysledna = Math.round(
-    aktivita.cenaZaklad * (aktivita.slevaNasobic ?? 1)
+    aktivita.cenaZaklad * (aktivitaPřihlášen.slevaNasobic ?? 1)
   );
 
   const cenaVyslednaString =
-    aktivita.slevaNasobic === 0 || aktivita.cenaZaklad <= 0 ? (
-      <>zdarma</>
-    ) : (
-      <>
-        {(aktivita.slevaNasobic ?? 1) !== 1 ? "*" : ""}
-        {cenaVysledna}&thinsp;Kč
-      </>
-    );
+  aktivitaPřihlášen.slevaNasobic === 0 || aktivita.cenaZaklad <= 0 ? (
+    <>zdarma</>
+  ) : (
+    <>
+      {(aktivitaPřihlášen.slevaNasobic ?? 1) !== 1 ? "*" : ""}
+      {cenaVysledna}&thinsp;Kč
+    </>
+  );
 
   const classes: string[] = [];
-  if (aktivita.prihlaseno) {
+  if (aktivitaPřihlášen.prihlaseno) {
     classes.push("prihlasen");
   }
-  if (aktivita.vedu) {
+  if (aktivitaPřihlášen.vedu) {
     classes.push("organizator");
   }
-  if (aktivita.nahradnik) {
-    classes.push("nahradnik");
-  }
+  // if (aktivitaPřihlášen.nahradnik) {
+  //   classes.push("nahradnik");
+  // }
   if (aktivita.vdalsiVlne) {
     classes.push("vDalsiVlne");
   }
@@ -96,14 +94,11 @@ export const TabulkaBuňka = (props: TabulkaBuňkaProps) => {
       <a
         class="title"
         title={aktivita.nazev}
-        onClick={() =>
-          setUrlState({ ...urlState, aktivitaNáhledId: aktivita.id })
-        }
       >
         {aktivita.nazev.substring(0, 20)}
       </a>
       <div class="obsazenost">
-        <ObsazenostComp obsazenost={aktivita.obsazenost} />
+        <ObsazenostComp obsazenost={aktivitaPřihlášen.obsazenost} />
       </div>
       <div class="cena">{cenaVyslednaString}</div>
     </div>
