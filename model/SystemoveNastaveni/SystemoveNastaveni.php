@@ -4,7 +4,6 @@ namespace Gamecon\SystemoveNastaveni;
 
 use Gamecon\Cas\DateTimeCz;
 use Gamecon\Cas\DateTimeGamecon;
-use Gamecon\Cas\DateTimeImmutableStrict;
 use Gamecon\Cas\Exceptions\InvalidDateTimeFormat;
 use Gamecon\SystemoveNastaveni\Exceptions\InvalidSystemSettingsValue;
 
@@ -16,7 +15,7 @@ class SystemoveNastaveni
     public static function vytvorZGlobals(): self {
         return new static(
             ROK,
-            new DateTimeImmutableStrict(),
+            new \DateTimeImmutable(),
             parse_url(URL_WEBU, PHP_URL_HOST) === 'beta.gamecon.cz',
             parse_url(URL_WEBU, PHP_URL_HOST) === 'localhost'
         );
@@ -31,27 +30,43 @@ class SystemoveNastaveni
         string $klic,
         int    $bonusZaStandardni3hAz5hAktivitu = BONUS_ZA_STANDARDNI_3H_AZ_5H_AKTIVITU
     ): int {
-        return match ($klic) {
-            'BONUS_ZA_1H_AKTIVITU' => self::zakrouhli($bonusZaStandardni3hAz5hAktivitu / 4),
-            'BONUS_ZA_2H_AKTIVITU' => self::zakrouhli($bonusZaStandardni3hAz5hAktivitu / 2),
-            'BONUS_ZA_6H_AZ_7H_AKTIVITU' => self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 1.5),
-            'BONUS_ZA_8H_AZ_9H_AKTIVITU' => self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 2),
-            'BONUS_ZA_10H_AZ_11H_AKTIVITU' => self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 2.5),
-            'BONUS_ZA_12H_AZ_13H_AKTIVITU' => self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 3),
-            default => throw new \LogicException("Neznámý klíč bonusu vypravěče '$klic'"),
-        };
+        switch ($klic) {
+            case 'BONUS_ZA_1H_AKTIVITU' :
+                return self::zakrouhli($bonusZaStandardni3hAz5hAktivitu / 4);
+            case 'BONUS_ZA_2H_AKTIVITU' :
+                return self::zakrouhli($bonusZaStandardni3hAz5hAktivitu / 2);
+            case 'BONUS_ZA_6H_AZ_7H_AKTIVITU' :
+                return self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 1.5);
+            case 'BONUS_ZA_8H_AZ_9H_AKTIVITU' :
+                return self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 2);
+            case 'BONUS_ZA_10H_AZ_11H_AKTIVITU' :
+                return self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 2.5);
+            case 'BONUS_ZA_12H_AZ_13H_AKTIVITU' :
+                return self::zakrouhli($bonusZaStandardni3hAz5hAktivitu * 3);
+            default :
+                throw new \LogicException("Neznámý klíč bonusu vypravěče '$klic'");
+        }
     }
 
     private static function zakrouhli(float $cislo): int {
         return (int)round($cislo, 0);
     }
 
+    private int $rok;
+    private \DateTimeImmutable $ted;
+    private bool $jsmeNaBete;
+    private bool $jsmeNaLocale;
+
     public function __construct(
-        private int                     $rok,
-        private DateTimeImmutableStrict $ted,
-        private bool                    $jsmeNaBete,
-        private bool                    $jsmeNaLocale
+        int                $rok,
+        \DateTimeImmutable $ted,
+        bool               $jsmeNaBete,
+        bool               $jsmeNaLocale
     ) {
+        $this->rok          = $rok;
+        $this->ted          = $ted;
+        $this->jsmeNaBete   = $jsmeNaBete;
+        $this->jsmeNaLocale = $jsmeNaLocale;
     }
 
     public function zaznamyDoKonstant() {
@@ -103,16 +118,24 @@ SQL,
     }
 
     public function zkonvertujHodnotuNaTyp($hodnota, string $datovyTyp) {
-        return match (strtolower(trim($datovyTyp))) {
-            'boolean', 'bool' => (bool)$hodnota,
-            'integer', 'int' => (int)$hodnota,
-            'number', 'float' => (float)$hodnota,
-            // když to změníš, rozbiješ JS systemove-nastaveni.js
-            'date' => (new DateTimeCz($hodnota))->formatDatumDb(),
-            // když to změníš, rozbiješ JS systemove-nastaveni.js
-            'datetime' => (new DateTimeCz($hodnota))->formatDb(),
-            default => (string)$hodnota,
-        };
+        switch (strtolower(trim($datovyTyp))) {
+            case 'boolean' :
+            case 'bool' :
+                return (bool)$hodnota;
+            case 'integer' :
+            case 'int' :
+                return (int)$hodnota;
+            case 'number' :
+            case 'float' :
+                return (float)$hodnota;
+            case 'date' : // když to změníš, rozbiješ JS systemove-nastaveni.js
+                return (new DateTimeCz($hodnota))->formatDatumDb();
+            case 'datetime' : // když to změníš, rozbiješ JS systemove-nastaveni.js
+                return (new DateTimeCz($hodnota))->formatDb();
+            case 'string' :
+            default :
+                return (string)$hodnota;
+        }
     }
 
     public function ulozZmenuHodnoty($hodnota, string $klic, \Uzivatel $editujici): int {
@@ -267,8 +290,8 @@ SQL;
                 $zaznam['vychozi_hodnota'] = $this->dejVychoziHodnotu($zaznam['klic']);
                 $zaznam['popis']           .= '<hr><i>výchozí hodnota</i>: ' . (
                     $zaznam['vychozi_hodnota'] !== ''
-                        ? htmlspecialchars($zaznam['vychozi_hodnota'], ENT_QUOTES | ENT_HTML5)
-                        : '<i>' . htmlspecialchars('>>>není<<<', ENT_QUOTES | ENT_HTML5) . '</i>'
+                        ? htmlspecialchars($zaznam['vychozi_hodnota'])
+                        : '<i>' . htmlspecialchars('>>>není<<<') . '</i>'
                     );
                 return $zaznam;
             },
@@ -277,37 +300,36 @@ SQL;
     }
 
     public function dejVychoziHodnotu(string $klic) {
-        return match ($klic) {
-            'GC_BEZI_OD' => DateTimeGamecon::spocitejZacatekGameconu($this->rok)
-                ->formatDb(),
-            'GC_BEZI_DO', 'REG_GC_DO' => DateTimeGamecon::spocitejKonecGameconu($this->rok)
-                ->formatDb(),
-            'REG_GC_OD' => DateTimeGamecon::spocitejZacatekRegistraciUcastniku($this->rok)
-                ->formatDb(),
-            'REG_AKTIVIT_OD' => DateTimeGamecon::spoctejZacatekPrvniVlnyOd($this->rok)
-                ->formatDb(),
-            'HROMADNE_ODHLASOVANI_1' => DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok)
-                ->formatDb(),
-            'HROMADNE_ODHLASOVANI_2' => DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok)
-                ->formatDb(),
-            'HROMADNE_ODHLASOVANI_3' => DateTimeGamecon::spocitejTretiHromadneOdhlasovaniOd($this->rok)
-                ->formatDb(),
-            'JIDLO_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok)
-                ->formatDatumDb(),
-            'PREDMETY_BEZ_TRICEK_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::zacatekProgramu($this->rok)
-                ->modify('-1 day')
-                ->formatDatumDb(),
-            'TRICKA_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok)
-                ->formatDatumDb(),
-            default => '',
-        };
+        switch ($klic) {
+            case 'GC_BEZI_OD' :
+                return DateTimeGamecon::spocitejZacatekGameconu($this->rok)->formatDb();
+            case 'GC_BEZI_DO' :
+            case 'REG_GC_DO' :
+                return DateTimeGamecon::spocitejKonecGameconu($this->rok)->formatDb();
+            case 'REG_GC_OD' :
+                return DateTimeGamecon::spocitejZacatekRegistraciUcastniku($this->rok)->formatDb();
+            case 'REG_AKTIVIT_OD' :
+                return DateTimeGamecon::spoctejZacatekPrvniVlnyOd($this->rok)->formatDb();
+            case 'HROMADNE_ODHLASOVANI' :
+                return DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok)->formatDb();
+            case 'HROMADNE_ODHLASOVANI_2' :
+                return DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok)->formatDb();
+            case 'JIDLO_LZE_OBJEDNAT_A_MENIT_DO_DNE' :
+                return DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok)->formatDatumDb();
+            case 'PREDMETY_BEZ_TRICEK_LZE_OBJEDNAT_A_MENIT_DO_DNE' :
+                return DateTimeGamecon::zacatekProgramu($this->rok)->modify('-1 day')->formatDatumDb();
+            case 'TRICKA_LZE_OBJEDNAT_A_MENIT_DO_DNE' :
+                return DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok)->formatDatumDb();
+            default :
+                return '';
+        }
     }
 
     public function rok(): int {
         return $this->rok;
     }
 
-    public function ted(): DateTimeImmutableStrict {
+    public function ted(): \DateTimeImmutable {
         return $this->ted;
     }
 
@@ -345,7 +367,7 @@ SQL;
     }
 
     public function prodejUbytovaniDo(): \DateTimeImmutable {
-        return (new DateTimeImmutableStrict(UBYTOVANI_LZE_OBJEDNAT_A_MENIT_DO_DNE))
+        return (new \DateTimeImmutable(UBYTOVANI_LZE_OBJEDNAT_A_MENIT_DO_DNE))
             ->setTime(23, 59, 59);
     }
 
@@ -354,7 +376,7 @@ SQL;
     }
 
     public function prodejJidlaDo(): \DateTimeImmutable {
-        return (new DateTimeImmutableStrict(JIDLO_LZE_OBJEDNAT_A_MENIT_DO_DNE))
+        return (new \DateTimeImmutable(JIDLO_LZE_OBJEDNAT_A_MENIT_DO_DNE))
             ->setTime(23, 59, 59);
     }
 
@@ -363,7 +385,7 @@ SQL;
     }
 
     public function prodejTricekDo(): \DateTimeImmutable {
-        return (new DateTimeImmutableStrict(TRICKA_LZE_OBJEDNAT_A_MENIT_DO_DNE))
+        return (new \DateTimeImmutable(TRICKA_LZE_OBJEDNAT_A_MENIT_DO_DNE))
             ->setTime(23, 59, 59);
     }
 
@@ -372,27 +394,11 @@ SQL;
     }
 
     public function prodejPredmetuDo(): \DateTimeImmutable {
-        return (new DateTimeImmutableStrict(PREDMETY_BEZ_TRICEK_LZE_OBJEDNAT_A_MENIT_DO_DNE))
+        return (new \DateTimeImmutable(PREDMETY_BEZ_TRICEK_LZE_OBJEDNAT_A_MENIT_DO_DNE))
             ->setTime(23, 59, 59);
     }
 
     public function prodejPredmetuBezTricekUkoncen(): bool {
         return $this->prodejPredmetuDo() < $this->ted();
-    }
-
-    public function prvniHromadneOdhlasovani(): \DateTimeImmutable {
-        return new DateTimeImmutableStrict(HROMADNE_ODHLASOVANI_1);
-    }
-
-    public function druheHromadneOdhlasovani(): \DateTimeImmutable {
-        return new DateTimeImmutableStrict(HROMADNE_ODHLASOVANI_2);
-    }
-
-    public function tretiHromadneOdhlasovani(): \DateTimeImmutable {
-        return new DateTimeImmutableStrict(HROMADNE_ODHLASOVANI_3);
-    }
-
-    public function zacatekNejblizsiVlnyOdhlasovani(): \DateTimeImmutable {
-        return DateTimeGamecon::zacatekNejblizsiVlnyOdhlasovani($this);
     }
 }
