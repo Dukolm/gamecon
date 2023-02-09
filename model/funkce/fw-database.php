@@ -77,8 +77,7 @@ function dbConnect($selectDb = true, bool $reconnect = false, int $rok = ROK): \
     }
 
     $stareSpojeni = $spojeni;
-
-    $noveSpojeni = _dbConnect(
+    $noveSpojeni  = _dbConnect(
         DB_SERV,
         DB_USER,
         DB_PASS,
@@ -86,10 +85,11 @@ function dbConnect($selectDb = true, bool $reconnect = false, int $rok = ROK): \
         $selectDb ? DB_NAME : null,
         $reconnect
     );
-
     if ($noveSpojeni && $stareSpojeni !== $noveSpojeni) {
         dbQuery('SET @rocnik = IF(@rocnik IS NOT NULL, @rocnik, $0)', $rok, $noveSpojeni);
     }
+    $spojeni = $noveSpojeni;
+
     return $noveSpojeni;
 }
 
