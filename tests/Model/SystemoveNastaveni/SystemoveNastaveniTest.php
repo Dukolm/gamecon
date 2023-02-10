@@ -60,7 +60,7 @@ class SystemoveNastaveniTest extends DbTest
     public function testUkoceniUbytovani(string $konecUbytovaniDne, bool $ocekavaneUkoceniProdeje) {
         define('UBYTOVANI_LZE_OBJEDNAT_A_MENIT_DO_DNE', $konecUbytovaniDne);
         $nastaveni = new SystemoveNastaveni(
-            ROK,
+            ROCNIK,
             new \DateTimeImmutable(),
             false,
             false
