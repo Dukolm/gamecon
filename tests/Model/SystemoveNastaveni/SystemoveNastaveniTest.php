@@ -40,14 +40,26 @@ SQL,
      * @dataProvider provideVychoziHodnota
      */
     public function testVychoziHodnoty(int $rok, string $klic, string $ocekavanaHodnota) {
-        $nastaveni = new SystemoveNastaveni(
-            $rok,
-            new DateTimeImmutableStrict($rok . '-12-31 23:59:59'),
-            false,
-            false
-        );
+        $nastaveni = $this->systemoveNastaveni($rok, new DateTimeImmutableStrict($rok . '-12-31 23:59:59'));
 
         self::assertSame($ocekavanaHodnota, $nastaveni->dejVychoziHodnotu($klic));
+    }
+
+    private function systemoveNastaveni(
+        int                     $rocnik = ROCNIK,
+        DateTimeImmutableStrict $now = new DateTimeImmutableStrict(),
+        bool                    $jsmeNaBete = false,
+        bool                    $jsmeNaLocale = false
+    ): SystemoveNastaveni {
+        return new SystemoveNastaveni(
+            $rocnik,
+            $now,
+            $jsmeNaBete,
+            $jsmeNaLocale,
+            DB_SERV,
+            DB_NAME,
+            DB_ANONYM_NAME
+        );
     }
 
     public function provideVychoziHodnota(): array {
@@ -67,7 +79,7 @@ SQL,
      */
     public function testUkoceniUbytovani(string $konecUbytovaniDne, bool $ocekavaneUkoceniProdeje) {
         define('UBYTOVANI_LZE_OBJEDNAT_A_MENIT_DO_DNE', $konecUbytovaniDne);
-        $nastaveni = new SystemoveNastaveni(ROCNIK, new DateTimeImmutableStrict(), false, false);
+        $nastaveni = $this->systemoveNastaveni();
         self::assertSame($ocekavaneUkoceniProdeje, $nastaveni->prodejUbytovaniUkoncen());
     }
 
@@ -81,10 +93,33 @@ SQL,
     }
 
     /**
+     * @dataProvider provideKdeJsme
+     */
+    public function testKdeJsme(bool $jsmeNaBete, bool $jsmeNaLocale, bool $ocekavaneJsmeNaOstre) {
+        $nastaveni = $this->systemoveNastaveni(ROCNIK, new DateTimeImmutableStrict(), $jsmeNaBete, $jsmeNaLocale);
+        self::assertSame($jsmeNaBete, $nastaveni->jsmeNaBete());
+        self::assertSame($jsmeNaLocale, $nastaveni->jsmeNaLocale());
+        self::assertSame($ocekavaneJsmeNaOstre, $nastaveni->jsmeNaOstre());
+    }
+
+    public function provideKdeJsme(): array {
+        return [
+            'jsme na locale' => [false, true, false],
+            'jsme na betě'   => [true, false, false],
+            'jsme na ostré'  => [false, false, true],
+        ];
+    }
+
+    public function testNemuzemeNastavitZeJsmeJakNaBeteTakNaLocale() {
+        $this->expectException(\LogicException::class);
+        $this->systemoveNastaveni(ROCNIK, new DateTimeImmutableStrict(), true, true);
+    }
+
+    /**
      * @test
      */
     public function Zacatek_nejblizsi_vlny_ubytovani_je_ocekavany() {
-        $nastaveni = new SystemoveNastaveni(ROCNIK, new DateTimeImmutableStrict(), false, false);
+        $nastaveni = $this->systemoveNastaveni();
         self::assertEquals(
             DateTimeGamecon::zacatekNejblizsiVlnyOdhlasovani($nastaveni),
             $nastaveni->zacatekNejblizsiVlnyOdhlasovani()

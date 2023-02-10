@@ -197,7 +197,7 @@ class SystemoveNastaveniHtml
     }
 
     private function zkopirujOstrouDatabazi() {
-        $kopieOstreDatabaze = new KopieOstreDatabaze();
+        $kopieOstreDatabaze = KopieOstreDatabaze::createFromGlobals();
         $kopieOstreDatabaze->zkopirujOstrouDatabazi();
     }
 

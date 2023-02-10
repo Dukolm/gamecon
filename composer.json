@@ -31,6 +31,7 @@
         "dg/mysql-dump": "^1.5",
         "endroid/qr-code": "^4.2",
         "google/apiclient": "^2.4",
+        "ifsnop/mysqldump-php": "^2.10",
         "granam/remove-diacritics": "^1.0",
         "granam/string": "^4.2",
         "michelf/php-markdown": "~1.4",
@@ -61,6 +62,9 @@
     },
     "extra": {
         "patches": {
+            "dg/mysql-dump": [
+                "patches/dg-mysql-dump-src-mysqlimport-php.patch"
+            ],
             "tracy/tracy": [
                 "patches/tracy-tracy-src-tracy-helpers-php.patch"
             ]
