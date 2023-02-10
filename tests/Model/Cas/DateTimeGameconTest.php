@@ -292,7 +292,10 @@ class DateTimeGameconTest extends TestCase
             ROCNIK,
             $ted,
             false,
-            false
+            false,
+            DB_SERV,
+            DB_NAME,
+            DB_ANONYM_NAME
         );
     }
 }
