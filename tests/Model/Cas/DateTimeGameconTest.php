@@ -4,6 +4,7 @@ namespace Gamecon\Tests\Model\Cas;
 
 use Gamecon\Cas\DateTimeGamecon;
 use Gamecon\Cas\DateTimeImmutableStrict;
+use Gamecon\SystemoveNastaveni\DatabazoveNastaveni;
 use Gamecon\SystemoveNastaveni\SystemoveNastaveni;
 use PHPUnit\Framework\TestCase;
 
@@ -293,9 +294,7 @@ class DateTimeGameconTest extends TestCase
             $ted,
             false,
             false,
-            DB_SERV,
-            DB_NAME,
-            DB_ANONYM_NAME
+            DatabazoveNastaveni::vytvorZGlobals()
         );
     }
 }
