@@ -73,7 +73,7 @@ function zabalSoubor(string $cestaKSouboru): string
         // TODO: vygenerovat univerzální cesty
         BASE_PATH_API: "<?= URL_WEBU . "/api/" ?>",
         BASE_PATH_PAGE: "<?= URL_WEBU . "/program/" ?>",
-        ROK: <?= ROK ?>,
+        ROCNIK: <?= ROCNIK ?>,
         LEGENDA: <?= json_encode($legendaText) ?>,
         FORCE_REDUX_DEVTOOLS: <?= defined("FORCE_REDUX_DEVTOOLS") ? "true" : "false" ?>,
     }
