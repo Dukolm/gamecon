@@ -48,7 +48,8 @@ export const ObchodNastaveni: FunctionComponent = (
   >();
 
   const uložMřížky = useCallback(async () => {
-    await fetchNastavMřížky(definiceObchod!);
+    if (!definiceObchod) return;
+    await fetchNastavMřížky(definiceObchod);
     setDefiniceObchod(undefined);
     setDefiniceObchod(await fetchMřížky());
   }, [definiceObchod]);

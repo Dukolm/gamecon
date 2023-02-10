@@ -1,18 +1,9 @@
 import { initEnv } from "./env";
 import { renderPages } from "./pages";
 
-// TODO: linter
-// TODO: použít absolutní importy ?
-// TODO: zvlášť ts a build konfigurace pro testování/admin/web
-// TODO: pro api používat normalizovaný čas třeba unix timestamp
-// TODO: program/muj_program při refreshi vrací nenalezeno. Preact by měl mít pod kontrolou komplet url za program/
-// TODO: legendaText by NEMĚLO být html
+// TODO: zbavit se html v db kde to jde (legenda text, program náhled ...)
 // TODO: uklidit duplicitní less styly.
-// TODO: revidovat názvosloví
-// TODO: Vytvořit zálohy node_modules pro případ nekompatabilní změny balíčku a smazání staré verze
 // TODO: github actions test na linter
-// TODO: readme: návod na práci s ui BUILDING Vývoj atd. ..
-// TODO: script pro zálohování node_modules
 
 //         Spouštění
 //         Developement

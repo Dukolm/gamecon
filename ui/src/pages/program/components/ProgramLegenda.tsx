@@ -13,7 +13,6 @@ export const ProgramLegenda = () => {
     <div class="program_legenda">
       <div
         class="informaceSpustime"
-        // TODO dangerously znamená dangerously. Vykreslovat text a né html!
         dangerouslySetInnerHTML={{
           __html: legendaText,
         }}

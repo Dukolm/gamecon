@@ -1,8 +1,8 @@
 import { FunctionComponent } from "preact";
 import { useProgramStore } from "../../../../store/program";
-import { generujUrl, porovnejTabulkaVýběr } from "../../../../store/program/slices/urlSlice";
 import { formátujDatum } from "../../../../utils";
 import produce from "immer";
+import { generujUrl, porovnejTabulkaVýběr } from "../../../../store/program/logic/url";
 
 type ProgramUživatelskéVstupyProps = {};
 
@@ -11,13 +11,14 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
 > = (props) => {
   const {} = props;
   const urlState = useProgramStore((s) => s.urlState);
+  const urlStateMožnosti = useProgramStore(s=>s.urlStateMožnosti);
 
   return (
     <>
       <div class="program_hlavicka">
         <h1>Program {urlState.rok}</h1>
         <div class="program_dny">
-          {urlState.možnosti.map((možnost) => {
+          {urlStateMožnosti.map((možnost) => {
             return (
               <a
                 href={

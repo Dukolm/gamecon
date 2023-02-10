@@ -28,8 +28,6 @@ export const ProgramNáhled: FunctionComponent<ProgramNáhledProps> = (props) =>
     programNáhledTextRef.current?.scroll?.(0, 0);
   }, [aktivita]);
 
-  // TODO: neukládat do DB pomocí html
-  // TODO: odebrat nevyužité classy
   return (
     <div class={obalClass}>
       <div class="programNahled_nahled">

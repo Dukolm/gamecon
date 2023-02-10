@@ -14,7 +14,6 @@ export type ZustandMutators = [
 
 export type MyStateCreator<State, T> = StateCreator<State, ZustandMutators, [], T>;
 
-// TODO: funguje devtools i v produkci ? zařídit aby nejelo (pravďepodobně pomocí druhého argumentu devtools funkce)
 export const createMyStore = <State>(createState: MyStateCreator<State, State>) =>
   create<State>()(
     subscribeWithSelector(devtools(immer((...args) => ({ ...createState(...args) })), {

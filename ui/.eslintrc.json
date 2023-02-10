@@ -80,8 +80,7 @@
         "argsIgnorePattern": "(props)|(^_)"
       }
     ],
-    // TODO: změnit na warn a vyřešit případy
-    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-non-null-assertion": "warn",
     // stojí za zvážení jestli zapnout
     "@typescript-eslint/no-unsafe-assignment": "off",
     // stojí za zvážení jestli zapnout
@@ -98,8 +97,6 @@
     "@typescript-eslint/consistent-type-exports": "warn",
     "@typescript-eslint/no-confusing-void-expression": "warn",
     "@typescript-eslint/prefer-regexp-exec": "warn",
-    // TODO: povolit a vyřešit případy
-    // "@typescript-eslint/strict-boolean-expressions": "warn",
     "@typescript-eslint/promise-function-async": "warn",
     "@typescript-eslint/prefer-enum-initializers": "error",
     "@typescript-eslint/switch-exhaustiveness-check": "warn",

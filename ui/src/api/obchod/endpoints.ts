@@ -32,7 +32,7 @@ export const fetchMřížky = async (): Promise<DefiniceObchod | null> => {
 
     const obj: DefiniceObchod = {
       mřížky: mřížkyApi.map(mřížkaRaw => ({
-        id: mřížkaRaw.id!,
+        id: mřížkaRaw.id ?? -1,
         text: mřížkaRaw.text,
         buňky: mřížkaRaw.bunky?.map(
           (buňka) => ({

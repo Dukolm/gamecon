@@ -96,8 +96,7 @@ const nastavAktivity = (aktivity: AktivitaSPřihlášen[]) => {
 
     aktivity.forEach(x => {
       s.data.aktivityPodleId[x.aktivita.id] = x.aktivita;
-      if (x.přihlášen)
-        s.data.aktivityPřihlášenPodleId[x.přihlášen.id] = x.přihlášen;
+      s.data.aktivityPřihlášenPodleId[x.přihlášen.id] = x.přihlášen;
     });
 
     s.data.aktivityPodleRoku[GAMECON_KONSTANTY.ROCNIK] = aktivity.map(x => x.aktivita);
@@ -135,6 +134,7 @@ export const TESTOVACÍ_STAVY: TestovacíStav[] = [
           x.přihlášen.stavPrihlaseni = "prihlasen";
         }),
         produce(createAktivita({ id: 6, hodina: 13 }), x => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           x.přihlášen.obsazenost!.m = 1;
         }),
         produce(createAktivita({ id: 7, hodina: 14 }), x => {

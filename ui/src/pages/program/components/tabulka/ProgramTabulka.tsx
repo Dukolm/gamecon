@@ -13,10 +13,10 @@ import {
   useAktivitaNáhled,
   useAktivity,
 } from "../../../../store/program/selektory";
-import { generujUrl } from "../../../../store/program/slices/urlSlice";
 import produce from "immer";
 import { Přihlašovátko } from "./Přihlašovátko";
 import { AktivitaPřihlášen } from "../../../../api/program";
+import { generujUrl } from "../../../../store/program/logic/url";
 
 type ProgramTabulkaProps = {};
 

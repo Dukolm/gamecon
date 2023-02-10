@@ -33,6 +33,7 @@ nasazování pořád buildovat)
 
 TODO:
 zdokumentovat používání FORCE_REDUX_DEVTOOLS
+jak používat linter
 
 TODO: návod pro práci se zustand
 ```ts

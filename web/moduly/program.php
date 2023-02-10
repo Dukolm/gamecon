@@ -17,6 +17,7 @@ for ($den = new DateTimeCz(PROGRAM_OD); $den->pred(PROGRAM_DO); $den->plusDen())
 $nastaveni       = [];
 $alternativniUrl = null;
 $title           = 'Program';
+// TODO: přesunout logiku práce s URL za program/ do preactu
 if ($url->cast(1) === 'muj') {
     $nastaveni[Program::OSOBNI] = true;
     $title                      = 'Můj program';

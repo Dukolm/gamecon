@@ -1,6 +1,7 @@
 import { useProgramStore } from ".";
 import { LOCAL_STORAGE_KLÍČE } from "../localStorageKlíče";
-import { nastavStateZUrl, nastavUrlZState, tabulkaMožnostíUrlStateProgram } from "./slices/urlSlice";
+import { tabulkaMožnostíUrlStateProgram } from "./logic/url";
+import { nastavStateZUrl, nastavUrlZState } from "./slices/urlSlice";
 
 
 // TODO: logiku pro autofetch na začátek první vlny (nějak vizuálně komunikovat že stránka byla načtena)
@@ -21,7 +22,7 @@ export const inicializujProgramStore = () => {
 
   useProgramStore.subscribe(s => !!s.přihlášenýUživatel.data.prihlasen, (přihlášen) => {
     useProgramStore.setState(s => {
-      s.urlState.možnosti = tabulkaMožnostíUrlStateProgram({ přihlášen });
+      s.urlStateMožnosti = tabulkaMožnostíUrlStateProgram({ přihlášen });
     });
   });
 

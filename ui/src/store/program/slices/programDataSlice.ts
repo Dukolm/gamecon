@@ -1,7 +1,9 @@
 import { ProgramStateCreator } from "..";
 import { Aktivita, AktivitaPřihlášen, fetchAktivity, fetchAktivityPřihlášen } from "../../../api/program";
 
-// TODO: vyřešit politiku updatů programu pro cache
+// TODO: navrhnout a implementovat politiku updatů programu pro cache
+// TODO: poupravit tvar dat rozdělit na data a indexaci (PodleRoku bude obsahovat jen id aktivity a ne celý objekt ...)
+
 
 export type ProgramDataSlice = {
   data: {

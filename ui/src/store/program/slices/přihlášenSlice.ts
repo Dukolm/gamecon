@@ -1,8 +1,6 @@
 import { ProgramStateCreator } from "..";
 import { fetchPřihlášenýUživatel, PřihlášenýUživatel } from "../../../api/přihlášenýUživatel";
 
-// TODO: vyřešit politiku updatů programu pro cache
-
 export type PřihlášenýUživatelSlice = {
   přihlášenýUživatel: {
     data: PřihlášenýUživatel,

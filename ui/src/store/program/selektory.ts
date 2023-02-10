@@ -4,10 +4,10 @@ import { Aktivita } from "../../api/program";
 export const useAktivity = () => {
   const urlState = useProgramStore((s) => s.urlState);
   const aktivity = useProgramStore(
-    (s) => s.data.aktivityPodleRoku[urlState.rok] || []
+    (s) => s.data.aktivityPodleRoku[urlState.rok] ?? []
   );
   const aktivityPřihlášen = useProgramStore(
-    (s) => s.data.aktivityPřihlášenPodleRoku[urlState.rok] || []
+    (s) => s.data.aktivityPřihlášenPodleRoku[urlState.rok] ?? []
   );
 
   return { aktivity, aktivityPřihlášen };
