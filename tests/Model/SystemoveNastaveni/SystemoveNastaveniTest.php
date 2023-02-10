@@ -67,7 +67,7 @@ SQL,
      */
     public function testUkoceniUbytovani(string $konecUbytovaniDne, bool $ocekavaneUkoceniProdeje) {
         define('UBYTOVANI_LZE_OBJEDNAT_A_MENIT_DO_DNE', $konecUbytovaniDne);
-        $nastaveni = new SystemoveNastaveni(ROK, new DateTimeImmutableStrict(), false, false);
+        $nastaveni = new SystemoveNastaveni(ROCNIK, new DateTimeImmutableStrict(), false, false);
         self::assertSame($ocekavaneUkoceniProdeje, $nastaveni->prodejUbytovaniUkoncen());
     }
 
@@ -84,7 +84,7 @@ SQL,
      * @test
      */
     public function Zacatek_nejblizsi_vlny_ubytovani_je_ocekavany() {
-        $nastaveni = new SystemoveNastaveni(ROK, new DateTimeImmutableStrict(), false, false);
+        $nastaveni = new SystemoveNastaveni(ROCNIK, new DateTimeImmutableStrict(), false, false);
         self::assertEquals(
             DateTimeGamecon::zacatekNejblizsiVlnyOdhlasovani($nastaveni),
             $nastaveni->zacatekNejblizsiVlnyOdhlasovani()

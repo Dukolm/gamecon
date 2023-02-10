@@ -88,7 +88,7 @@ class DateTimeGameconTest extends TestCase
     public function testZacatekLetosnichRegistraciUcastniku() {
         self::assertEquals(
             DateTimeGamecon::createFromMysql(REG_GC_OD),
-            DateTimeGamecon::zacatekRegistraciUcastniku(ROK),
+            DateTimeGamecon::zacatekRegistraciUcastniku(ROCNIK),
             'Očekáván jiný začátek registrací, viz konstanta REG_GC_OD: ' . REG_GC_OD
         );
     }
@@ -121,7 +121,7 @@ class DateTimeGameconTest extends TestCase
     public function testZacatekPrvniVlnyOd() {
         self::assertEquals(
             DateTimeGamecon::createFromMysql(REG_AKTIVIT_OD),
-            DateTimeGamecon::zacatekPrvniVlnyOd(ROK),
+            DateTimeGamecon::zacatekPrvniVlnyOd(ROCNIK),
             'Očekáván jiný začátek první vlny pro letošek, viz konstanta REG_AKTIVIT_OD: ' . REG_AKTIVIT_OD
         );
 
@@ -289,7 +289,7 @@ class DateTimeGameconTest extends TestCase
 
     private function dejSystemoveNastaveni(DateTimeImmutableStrict $ted): SystemoveNastaveni {
         return new SystemoveNastaveni(
-            ROK,
+            ROCNIK,
             $ted,
             false,
             false

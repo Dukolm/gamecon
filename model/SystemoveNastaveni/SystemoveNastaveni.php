@@ -11,11 +11,11 @@ use Gamecon\SystemoveNastaveni\Exceptions\InvalidSystemSettingsValue;
 class SystemoveNastaveni
 {
 
-    public const ROK = ROK;
+    public const ROCNIK = ROCNIK;
 
     public static function vytvorZGlobals(): self {
         return new static(
-            ROK,
+            ROCNIK,
             new DateTimeImmutableStrict(),
             parse_url(URL_WEBU, PHP_URL_HOST) === 'beta.gamecon.cz',
             parse_url(URL_WEBU, PHP_URL_HOST) === 'localhost'
@@ -80,12 +80,21 @@ SQL,
         }
         foreach ($zaznamy as $zaznam) {
             $nazevKonstanty = trim(strtoupper($zaznam['klic']));
+            $hodnota        = $zaznam['aktivni']
+                ? $zaznam['hodnota']
+                : $this->dejVychoziHodnotu($nazevKonstanty);
+            $hodnota        = $this->zkonvertujHodnotuNaTyp($hodnota, $zaznam['datovy_typ']);
             if (!defined($nazevKonstanty)) {
-                $hodnota = $zaznam['aktivni']
-                    ? $zaznam['hodnota']
-                    : $this->dejVychoziHodnotu($nazevKonstanty);
-                $hodnota = $this->zkonvertujHodnotuNaTyp($hodnota, $zaznam['datovy_typ']);
                 define($nazevKonstanty, $hodnota);
+            } elseif (constant($nazevKonstanty) !== $hodnota) {
+                throw new InvalidSystemSettingsValue(
+                    sprintf(
+                        "Konstanta '%s' už je definována, ale s jinou hodnotou '%s' než očekávanou '%s'",
+                        $nazevKonstanty,
+                        var_export(constant($nazevKonstanty), true),
+                        var_export($hodnota, true),
+                    )
+                );
             }
         }
         $this->definujOdvozeneKonstanty();
@@ -116,6 +125,7 @@ SQL,
     }
 
     public function ulozZmenuHodnoty($hodnota, string $klic, \Uzivatel $editujici): int {
+        $this->hlidejZakazaneZmeny($klic);
         $updateQuery = dbQuery(<<<SQL
 UPDATE systemove_nastaveni
 SET hodnota = $1
@@ -134,7 +144,14 @@ SQL,
         return dbNumRows($updateQuery);
     }
 
+    private function hlidejZakazaneZmeny(string $klic) {
+        if ($klic === 'ROCNIK') {
+            throw new \LogicException('Ročník nelze měnit jinak než konstantou ROCNIK přes PHP');
+        }
+    }
+
     public function ulozZmenuPlatnosti(bool $aktivni, string $klic, \Uzivatel $editujici): int {
+        $this->hlidejZakazaneZmeny($klic);
         $updateQuery = dbQuery(<<<SQL
 UPDATE systemove_nastaveni
 SET aktivni = $1
@@ -230,7 +247,8 @@ SELECT systemove_nastaveni.klic,
        COALESCE(naposledy, systemove_nastaveni.zmena_kdy) AS kdy,
        posledni_s_uzivatelem.id_uzivatele,
        systemove_nastaveni.skupina,
-       systemove_nastaveni.poradi
+       systemove_nastaveni.poradi,
+       systemove_nastaveni.pouze_pro_cteni
 FROM systemove_nastaveni
 LEFT JOIN (
     SELECT posledni_log.naposledy, systemove_nastaveni_log.id_nastaveni, systemove_nastaveni_log.id_uzivatele
@@ -254,8 +272,8 @@ SQL;
         return $this->vlozOstatniBonusyVypravecuDoPopisu(
             $this->pridejVychoziHodnoty(
                 dbFetchAll(
-                    $this->dejSqlNaZaVsechnyZaznamyNastaveni(['systemove_nastaveni.klic IN ($1)']),
-                    [$klice],
+                    $this->dejSqlNaZaVsechnyZaznamyNastaveni(['systemove_nastaveni.klic IN ($0)']),
+                    [0 => $klice],
                 )
             )
         );
@@ -278,31 +296,35 @@ SQL;
 
     public function dejVychoziHodnotu(string $klic) {
         return match ($klic) {
-            'GC_BEZI_OD' => DateTimeGamecon::spocitejZacatekGameconu($this->rok)
+            'GC_BEZI_OD' => DateTimeGamecon::spocitejZacatekGameconu($this->rok())
                 ->formatDb(),
-            'GC_BEZI_DO', 'REG_GC_DO' => DateTimeGamecon::spocitejKonecGameconu($this->rok)
+            'GC_BEZI_DO', 'REG_GC_DO' => DateTimeGamecon::spocitejKonecGameconu($this->rok())
                 ->formatDb(),
-            'REG_GC_OD' => DateTimeGamecon::spocitejZacatekRegistraciUcastniku($this->rok)
+            'REG_GC_OD' => DateTimeGamecon::spocitejZacatekRegistraciUcastniku($this->rok())
                 ->formatDb(),
-            'REG_AKTIVIT_OD' => DateTimeGamecon::spoctejZacatekPrvniVlnyOd($this->rok)
+            'REG_AKTIVIT_OD' => DateTimeGamecon::spoctejZacatekPrvniVlnyOd($this->rok())
                 ->formatDb(),
-            'HROMADNE_ODHLASOVANI_1' => DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok)
+            'HROMADNE_ODHLASOVANI_1' => DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok())
                 ->formatDb(),
-            'HROMADNE_ODHLASOVANI_2' => DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok)
+            'HROMADNE_ODHLASOVANI_2' => DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok())
                 ->formatDb(),
-            'HROMADNE_ODHLASOVANI_3' => DateTimeGamecon::spocitejTretiHromadneOdhlasovaniOd($this->rok)
+            'HROMADNE_ODHLASOVANI_3' => DateTimeGamecon::spocitejTretiHromadneOdhlasovaniOd($this->rok())
                 ->formatDb(),
-            'JIDLO_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok)
+            'JIDLO_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::spocitejDruheHromadneOdhlasovaniOd($this->rok())
                 ->formatDatumDb(),
-            'PREDMETY_BEZ_TRICEK_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::zacatekProgramu($this->rok)
+            'PREDMETY_BEZ_TRICEK_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::zacatekProgramu($this->rok())
                 ->modify('-1 day')
                 ->formatDatumDb(),
-            'TRICKA_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok)
+            'TRICKA_LZE_OBJEDNAT_A_MENIT_DO_DNE' => DateTimeGamecon::spocitejPrvniHromadneOdhlasovaniOd($this->rok())
                 ->formatDatumDb(),
             default => '',
         };
     }
 
+    /**
+     * Pozor, mělo by to odpovídat konstantě ROCNIK, respektive hodnotě v SQL tabulce systemove_nastaveni.
+     * Pokud je to jinak, tak za následky neručíme (doporučené pouze pro testy).
+     */
     public function rok(): int {
         return $this->rok;
     }
