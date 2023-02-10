@@ -6,6 +6,7 @@ namespace Gamecon\Tests\Model\SystemoveNastaveni;
 
 use Gamecon\Cas\DateTimeGamecon;
 use Gamecon\Cas\DateTimeImmutableStrict;
+use Gamecon\SystemoveNastaveni\DatabazoveNastaveni;
 use Gamecon\SystemoveNastaveni\SystemoveNastaveni;
 use Gamecon\Tests\Db\DbTest;
 
@@ -56,9 +57,7 @@ SQL,
             $now,
             $jsmeNaBete,
             $jsmeNaLocale,
-            DB_SERV,
-            DB_NAME,
-            DB_ANONYM_NAME
+            DatabazoveNastaveni::vytvorZGlobals()
         );
     }
 

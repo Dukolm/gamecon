@@ -19,9 +19,7 @@ class SystemoveNastaveni
             new DateTimeImmutableStrict(),
             parse_url(URL_WEBU, PHP_URL_HOST) === 'beta.gamecon.cz',
             parse_url(URL_WEBU, PHP_URL_HOST) === 'localhost',
-            DB_SERV,
-            DB_NAME,
-            DB_ANONYM_NAME
+            DatabazoveNastaveni::vytvorZGlobals()
         );
     }
 
@@ -54,9 +52,7 @@ class SystemoveNastaveni
         private DateTimeImmutableStrict $ted,
         private bool                    $jsmeNaBete,
         private bool                    $jsmeNaLocale,
-        private string                  $serverDatabase,
-        private string                  $hlavniDatabaze,
-        private string                  $anonymizovanaDatabaze
+        private DatabazoveNastaveni     $databazoveNastaveni
     ) {
         if ($jsmeNaLocale && $jsmeNaBete) {
             throw new \LogicException('Nemůžeme být na betě a zároveň na locale');
@@ -415,6 +411,10 @@ SQL;
         return $this->prodejPredmetuDo() < $this->ted();
     }
 
+    public function databazoveNastaveni(): DatabazoveNastaveni {
+        return $this->databazoveNastaveni;
+    }
+
     public function prvniHromadneOdhlasovani(): \DateTimeImmutable {
         return new DateTimeImmutableStrict(HROMADNE_ODHLASOVANI_1);
     }
@@ -429,17 +429,5 @@ SQL;
 
     public function zacatekNejblizsiVlnyOdhlasovani(): \DateTimeImmutable {
         return DateTimeGamecon::zacatekNejblizsiVlnyOdhlasovani($this);
-    }
-
-    public function hlavniDatabaze(): string {
-        return $this->hlavniDatabaze;
-    }
-
-    public function databazovyServer(): string {
-        return $this->serverDatabase;
-    }
-
-    public function anonymizovanaDatabaze(): string {
-        return $this->anonymizovanaDatabaze;
     }
 }
