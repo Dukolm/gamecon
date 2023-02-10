@@ -10,7 +10,7 @@ export type PřihlášenýUživatelSlice = {
   načtiPřihlášenýUživatel(): Promise<void>
 }
 
-export const createPřihlášenýUživatelSlice: ProgramStateCreator<PřihlášenýUživatelSlice> = (set, get) => ({
+export const createPřihlášenýUživatelSlice: ProgramStateCreator<PřihlášenýUživatelSlice> = (set, _get) => ({
   přihlášenýUživatel: {
     data: {},
   },

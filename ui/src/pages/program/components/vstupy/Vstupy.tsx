@@ -9,6 +9,7 @@ type ProgramUživatelskéVstupyProps = {};
 export const ProgramUživatelskéVstupy: FunctionComponent<
   ProgramUživatelskéVstupyProps
 > = (props) => {
+  const {} = props;
   const urlState = useProgramStore((s) => s.urlState);
 
   return (

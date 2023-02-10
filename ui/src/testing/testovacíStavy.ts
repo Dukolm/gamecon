@@ -28,7 +28,7 @@ const resetStav = {
         typ: "den",
         datum: new Date(GAMECON_KONSTANTY.PROGRAM_OD),
       };
-      s.urlState.rok = GAMECON_KONSTANTY.ROK;
+      s.urlState.rok = GAMECON_KONSTANTY.ROCNIK;
     });
   },
 };
@@ -100,8 +100,8 @@ const nastavAktivity = (aktivity: AktivitaSPřihlášen[]) => {
         s.data.aktivityPřihlášenPodleId[x.přihlášen.id] = x.přihlášen;
     });
 
-    s.data.aktivityPodleRoku[GAMECON_KONSTANTY.ROK] = aktivity.map(x => x.aktivita);
-    s.data.aktivityPřihlášenPodleRoku[GAMECON_KONSTANTY.ROK] =
+    s.data.aktivityPodleRoku[GAMECON_KONSTANTY.ROCNIK] = aktivity.map(x => x.aktivita);
+    s.data.aktivityPřihlášenPodleRoku[GAMECON_KONSTANTY.ROCNIK] =
       aktivity.map(x => x.přihlášen);
   });
 };
@@ -135,7 +135,7 @@ export const TESTOVACÍ_STAVY: TestovacíStav[] = [
           x.přihlášen.stavPrihlaseni = "prihlasen";
         }),
         produce(createAktivita({ id: 6, hodina: 13 }), x => {
-          x.přihlášen.obsazenost.m = 1;
+          x.přihlášen.obsazenost!.m = 1;
         }),
         produce(createAktivita({ id: 7, hodina: 14 }), x => {
           x.přihlášen.vedu = true;

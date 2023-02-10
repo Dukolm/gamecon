@@ -77,7 +77,7 @@
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {
-        "argsIgnorePattern": "props"
+        "argsIgnorePattern": "(props)|(^_)"
       }
     ],
     // TODO: změnit na warn a vyřešit případy

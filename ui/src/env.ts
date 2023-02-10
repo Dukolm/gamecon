@@ -84,7 +84,7 @@ const ČAS_DEN = 24 * 60 * 60 * 1000;
 GAMECON_KONSTANTY.PROGRAM_DNY = range(GAMECON_KONSTANTY.PROGRAM_OD, GAMECON_KONSTANTY.PROGRAM_DO, ČAS_DEN);
 
 /** Roky ve kterých se gamecon konal */
-export const ROKY = range(2009, GAMECON_KONSTANTY.ROK).filter(x => x !== 2020);
+export const ROKY = range(2009, GAMECON_KONSTANTY.ROCNIK).filter(x => x !== 2020);
 
 export const initEnv = () => {
   window.preactMost = {
