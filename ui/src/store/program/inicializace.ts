@@ -39,7 +39,7 @@ export const inicializujProgramStore = () => {
     try {
       useProgramStore.setState(s=>{
         s.data =  JSON.parse(dataProgramString);
-      });
+      }, undefined, "načtení uložených dat");
     }catch(e) {
       console.warn("nepodařilo se načíst data z local storage");
     }
@@ -52,7 +52,7 @@ export const inicializujProgramStore = () => {
   const načtiRok = useProgramStore.getState().načtiRok;
 
   const rok = useProgramStore.getState().urlState.rok;
-  void načtiRok(rok);
+  void načtiRok(rok, true);
 
   useProgramStore.subscribe(s => s.urlState.rok, (rok) => {
     void načtiRok(rok);

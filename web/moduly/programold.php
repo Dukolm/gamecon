@@ -146,14 +146,4 @@ function zabalSoubor(string $cestaKSouboru): string {
 
     // programPosuv(document.querySelector('.programPosuv_obal2'))
 
-    // <?php if ($zacatekPrvniVlnyZaSekund > 0) {
-    // $zacatekPrvniVlnyZaMilisekund = $zacatekPrvniVlnyZaSekund * 1000;
-    // if ($zacatekPrvniVlnyZaMilisekund > 0) { ?> /*kdyby to náhodou přeteklo za 2^32 -1 */
-    // if (<?= $zacatekPrvniVlnyZaMilisekund ?> <= 2147483647) {
-    //     setTimeout(function () {
-    //         location.reload()
-    //     }, <?= $zacatekPrvniVlnyZaMilisekund ?>)
-    // }
-    // <?php }
-    // } ?>
 </script>

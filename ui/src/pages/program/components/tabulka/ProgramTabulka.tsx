@@ -45,7 +45,7 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
 
   const aktivityFiltrované = aktivity.filter((aktivita) =>
     urlState.výběr.typ === "můj"
-      ? aktivityPřihlášen.find((x) => x.id === aktivita.id)?.prihlaseno
+      ? aktivityPřihlášen.find((x) => x.id === aktivita.id)?.prihlasen
       : new Date(aktivita.cas.od).getDay() === urlState.výběr.datum.getDay()
   );
 
@@ -118,14 +118,17 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                           ({ id: aktivita.id } as AktivitaPřihlášen);
 
                         const classes: string[] = [];
-                        if (aktivitaPřihlášen.prihlaseno) {
+                        if (
+                          aktivitaPřihlášen.prihlasen &&
+                          aktivitaPřihlášen.stavPrihlaseni !== "sledujici"
+                        ) {
                           classes.push("prihlasen");
                         }
                         if (aktivitaPřihlášen.vedu) {
                           classes.push("organizator");
                         }
-                        if (aktivitaPřihlášen.sleduju) {
-                          classes.push("nahradnik");
+                        if (aktivitaPřihlášen.stavPrihlaseni === "sledujici") {
+                          classes.push("sledujici");
                         }
                         if (aktivita.vdalsiVlne) {
                           classes.push("vDalsiVlne");
@@ -134,7 +137,11 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                           classes.push("vBudoucnu");
                         }
 
+                        let aktivitaObsazenost: JSX.Element | undefined =
+                          undefined;
                         if (aktivitaPřihlášen.obsazenost) {
+                          const { m, f, km, kf, ku } =
+                            aktivitaPřihlášen.obsazenost;
                           const volnoTyp = volnoTypZObsazenost(
                             aktivitaPřihlášen.obsazenost
                           );
@@ -143,6 +150,54 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                             volnoTyp !== uživatel.pohlavi
                           ) {
                             classes.push("plno");
+                          }
+
+                          const celkem = m + f;
+                          const kapacitaCelkem = km + kf + ku;
+                          // TODO: jak poznám aktivitu bez omezení ?
+                          if (kapacitaCelkem) {
+                            if (
+                              !aktivitaPřihlášen.prihlasovatelna &&
+                              !aktivita.probehnuta
+                            ) {
+                              aktivitaObsazenost = (
+                                <span class="neprihlasovatelna">
+                                  {`(${celkem}/${kapacitaCelkem})`}
+                                </span>
+                              );
+                            }
+
+                            switch (volnoTyp) {
+                              case "u":
+                              case "x":
+                                aktivitaObsazenost = (
+                                  <>{`(${celkem}/${kapacitaCelkem})`}</>
+                                );
+                                break;
+                              case "f":
+                              case "m":
+                                aktivitaObsazenost = (
+                                  <>
+                                    <span class="f">{`(${f}/${
+                                      kf + (volnoTyp === "m" ? ku : 0)
+                                    })`}</span>
+                                    <span class="m">{`(${m}/${
+                                      km + (volnoTyp === "f" ? ku : 0)
+                                    })`}</span>
+                                  </>
+                                );
+                                break;
+                              default:
+                                aktivitaObsazenost = <>{` (${f + m}/${ku})`}</>;
+                                break;
+                            }
+                            if (aktivitaObsazenost) {
+                              aktivitaObsazenost = (
+                                <span class="program_obsazenost">
+                                  {aktivitaObsazenost}
+                                </span>
+                              );
+                            }
                           }
                         }
 
@@ -177,35 +232,28 @@ export const ProgramTabulka: FunctionComponent<ProgramTabulkaProps> = (
                                 >
                                   {aktivita.nazev}
                                 </a>
-                                {aktivitaPřihlášen.obsazenost &&
-                                // TODO: jak poznám aktivitu bez omezení ?
-                                (aktivitaPřihlášen.obsazenost.ku ||
-                                  aktivitaPřihlášen.obsazenost.km ||
-                                  aktivitaPřihlášen.obsazenost.kf) ? (
-                                    <span class="program_obsazenost">{` (${
-                                      aktivitaPřihlášen.obsazenost.f +
-                                    aktivitaPřihlášen.obsazenost.m
-                                    }/${aktivitaPřihlášen.obsazenost.ku})`}</span>
-                                  ) : undefined}
-                                <Přihlašovátko akitivitaId={aktivita.id} />
+                                {aktivitaObsazenost}
+                                {` `}<Přihlašovátko akitivitaId={aktivita.id} />
                                 {(aktivitaPřihlášen.mistnost || undefined) && (
                                   <div class="program_lokace">
                                     {aktivitaPřihlášen.mistnost}
                                   </div>
                                 )}
-                                {
-                                  seskupPodle === SeskupováníAktivit.den ? <span class="program_osobniTyp">
+                                {seskupPodle === SeskupováníAktivit.den ? (
+                                  <span class="program_osobniTyp">
                                     {aktivita.linie}
-                                  </span> : undefined
-                                }
+                                  </span>
+                                ) : undefined}
                               </div>
                             </td>
                           </>
                         );
                       })}
-                    {posledníAktivitaDo > 0 ? range(KONEC_AKITIVIT - posledníAktivitaDo).map(() => (
-                      <td></td>
-                    )) : undefined}
+                    {posledníAktivitaDo > 0
+                      ? range(KONEC_AKITIVIT - posledníAktivitaDo).map(() => (
+                          <td></td>
+                        ))
+                      : undefined}
                   </tr>
                 );
               })}

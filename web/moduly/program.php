@@ -71,7 +71,6 @@ function zabalSoubor(string $cestaKSouboru): string
 <script>
     // Konstanty předáváné do Preactu (env.ts)
     window.GAMECON_KONSTANTY = {
-        // TODO: vygenerovat univerzální cesty
         BASE_PATH_API: "<?= URL_WEBU . "/api/" ?>",
         BASE_PATH_PAGE: "<?= URL_WEBU . "/program/" ?>",
         ROCNIK: <?= ROCNIK ?>,

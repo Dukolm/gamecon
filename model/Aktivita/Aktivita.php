@@ -1644,7 +1644,7 @@ SQL
     /**
      * @see \Gamecon\Aktivita\StavPrihlaseni
      * Vrátí stav přihlášení uživatele na aktivitu. Pokud není přihlášen, vrací
-     * hodnotu -1.
+     * hodnotu StavPrihlaseni::NEPRIHLASEN.
      */
     public function stavPrihlaseni(\Uzivatel $u): int {
         $prihlaseni = $this->prihlaseniRaw();
@@ -1660,7 +1660,7 @@ SQL
             }
         }
 
-        return -1;
+        return StavPrihlaseni::NEPRIHLASEN;
     }
 
     /**

@@ -57,8 +57,9 @@ export type Aktivita = {
 export type AktivitaPřihlášen = {
   id: number,
   obsazenost?: Obsazenost,
+  // TODO: odebrat přihlášen, redundantní k stavPrihlaseni
   /** uživatelská vlastnost */
-  prihlaseno?: boolean,
+  prihlasen?: boolean,
   /** V jakém stavu je pokud je přihlášen */
   stavPrihlaseni?: StavPřihlášení,
   /** uživatelská vlastnost */
@@ -70,7 +71,6 @@ export type AktivitaPřihlášen = {
   vedu?: boolean,
   zamcena?: boolean,
   prihlasovatelna?: boolean,
-  sleduju?: boolean,
 }
 
 // TODO: dotahovat zvlášť aktivity a metadata k nim (současně posílá moc velký soubor)

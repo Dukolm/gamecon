@@ -85,7 +85,7 @@ export const Přihlašovátko: FunctionComponent<TPřihlašovátkoProps> = (prop
 
     const prihlasovatelnaProSledujici = !aktivita.dite?.length && !aktivita.tymova;
     if (prihlasovatelnaProSledujici) {
-      if (aktivitaUživatel.sleduju)
+      if (aktivitaUživatel.stavPrihlaseni === "sledujici")
         return <FormTlačítko id={aktivita.id} typ={"odhlasSledujiciho"} />;
       else
         return <FormTlačítko id={aktivita.id} typ={"prihlasSledujiciho"} />;

@@ -126,11 +126,12 @@ export const TESTOVACÍ_STAVY: TestovacíStav[] = [
         }),
         produce(createAktivita({ id: 4, hodina: 11 }), x => {
           x.přihlášen.prihlasovatelna = true;
-          x.přihlášen.sleduju = true;
+          x.přihlášen.prihlasen = true;
+          x.přihlášen.stavPrihlaseni = "prihlasen";
         }),
         produce(createAktivita({ id: 5, hodina: 12, trvání: 3 }), x => {
           x.přihlášen.prihlasovatelna = true;
-          x.přihlášen.prihlaseno = true;
+          x.přihlášen.prihlasen = true;
           x.přihlášen.stavPrihlaseni = "prihlasen";
         }),
         produce(createAktivita({ id: 6, hodina: 13 }), x => {
@@ -142,17 +143,17 @@ export const TESTOVACÍ_STAVY: TestovacíStav[] = [
         }),
         produce(createAktivita({ id: 8, hodina: 15 }), x => {
           x.přihlášen.prihlasovatelna = true;
-          x.přihlášen.prihlaseno = true;
+          x.přihlášen.prihlasen = true;
           x.přihlášen.stavPrihlaseni = "prihlasenAleNedorazil";
         }),
         produce(createAktivita({ id: 9, hodina: 9+24*2 }), x => {
           x.přihlášen.prihlasovatelna = true;
-          x.přihlášen.prihlaseno = true;
+          x.přihlášen.prihlasen = true;
           x.přihlášen.stavPrihlaseni = "prihlasen";
         }),
         produce(createAktivita({ id: 10, hodina: 8+24*3 }), x => {
           x.přihlášen.prihlasovatelna = true;
-          x.přihlášen.prihlaseno = true;
+          x.přihlášen.prihlasen = true;
           x.přihlášen.stavPrihlaseni = "prihlasen";
         }),
       ]);

@@ -57,17 +57,17 @@ foreach ($aktivity as &$a) {
     'id'        =>  $a->id(),
   ];
 
-  $prihlasen = $u && $a->prihlasen($u);
-  if ($u && $prihlasen) {
-    $aktivitaRes['prihlasen'] = $prihlasen;
+  if ($u) {
+    $stavPrihlasen = $a->stavPrihlaseni($u);
 
-    $stav = $this->stavPrihlaseni($u);
-    if (StavPrihlaseni::PRIHLASEN) $aktivitaRes['stavPrihlaseni'] = 'prihlasen';
-    if (StavPrihlaseni::PRIHLASEN_A_DORAZIL) $aktivitaRes['stavPrihlaseni'] = 'prihlasenADorazil';
-    if (StavPrihlaseni::DORAZIL_JAKO_NAHRADNIK) $aktivitaRes['stavPrihlaseni'] = 'dorazilJakoNahradnik';
-    if (StavPrihlaseni::PRIHLASEN_ALE_NEDORAZIL) $aktivitaRes['stavPrihlaseni'] = 'prihlasenAleNedorazil';
-    if (StavPrihlaseni::POZDE_ZRUSIL) $aktivitaRes['stavPrihlaseni'] = 'pozdeZrusil';
-    if (StavPrihlaseni::SLEDUJICI) $aktivitaRes['stavPrihlaseni'] = 'sledujici';
+    if ($stavPrihlasen != StavPrihlaseni::NEPRIHLASEN) $aktivitaRes['prihlasen'] = true;
+
+    if ($stavPrihlasen == StavPrihlaseni::PRIHLASEN) $aktivitaRes['stavPrihlaseni'] = 'prihlasen';
+    if ($stavPrihlasen == StavPrihlaseni::PRIHLASEN_A_DORAZIL) $aktivitaRes['stavPrihlaseni'] = 'prihlasenADorazil';
+    if ($stavPrihlasen == StavPrihlaseni::DORAZIL_JAKO_NAHRADNIK) $aktivitaRes['stavPrihlaseni'] = 'dorazilJakoNahradnik';
+    if ($stavPrihlasen == StavPrihlaseni::PRIHLASEN_ALE_NEDORAZIL) $aktivitaRes['stavPrihlaseni'] = 'prihlasenAleNedorazil';
+    if ($stavPrihlasen == StavPrihlaseni::POZDE_ZRUSIL) $aktivitaRes['stavPrihlaseni'] = 'pozdeZrusil';
+    if ($stavPrihlasen == StavPrihlaseni::SLEDUJICI) $aktivitaRes['stavPrihlaseni'] = 'sledujici';
   }
 
   $slevaNasobic = $a->slevaNasobic($u);
@@ -87,7 +87,7 @@ foreach ($aktivity as &$a) {
   }
 
   $zamcena = $a->zamcena();
-  if ($prihlasovatelna) {
+  if ($zamcena) {
     $aktivitaRes['zamcena'] = $zamcena;
   }
 
@@ -97,22 +97,6 @@ foreach ($aktivity as &$a) {
   if ($tymova) {
     $aktivitaRes['tymova'] = $tymova;
   }
-
-  /*
-  $sleduju = $u->prihlasenJakoSledujici($a);
-  if ($sleduju) {
-    $aktivitaRes['sleduju'] = $sleduju;
-  }
-  */
-
-
-  /*
-  $nahradnik = $u && $u->prihlasenJakoNahradnikNa($a);
-  if ($nahradnik) {
-    $aktivitaRes['nahradnik'] = $nahradnik;
-    $zachovat = true;
-  }
-  */
 
   $res[] = $aktivitaRes;
 }
