@@ -32,6 +32,9 @@ define('FORCE_REDUX_DEVTOOLS', true);
   ROCNIK: number,
   PROGRAM_OD: number,
   PROGRAM_DO: number,
+  /**
+   * !nenastavovat ručně, dopočítá se při startu z PROGRAM_OD-..._DO
+   */
   PROGRAM_DNY: number[],
   PROGRAM_ŘAZENÍ_LINIE: string[],
   LEGENDA: string,

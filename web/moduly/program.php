@@ -76,6 +76,8 @@ function zabalSoubor(string $cestaKSouboru): string
         ROCNIK: <?= ROCNIK ?>,
         LEGENDA: <?= json_encode($legendaText) ?>,
         FORCE_REDUX_DEVTOOLS: <?= defined("FORCE_REDUX_DEVTOOLS") ? "true" : "false" ?>,
+        PROGRAM_OD: <?= (new DateTimeCz(PROGRAM_OD))->getTimestamp() ?>000,
+        PROGRAM_DO: <?= (new DateTimeCz(PROGRAM_DO))->getTimestamp() ?>000,
     }
 
     window.gameconPřednačtení =
