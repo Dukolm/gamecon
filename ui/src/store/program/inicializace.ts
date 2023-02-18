@@ -1,11 +1,21 @@
 import { useProgramStore } from ".";
+import { GAMECON_KONSTANTY } from "../../env";
+import { distinct } from "../../utils";
 import { LOCAL_STORAGE_KLÍČE } from "../localStorageKlíče";
-import { tabulkaMožnostíUrlStateProgram } from "./logic/url";
-import { načtiRok } from "./slices/programDataSlice";
+import { urlStateProgramTabulkaMožnostíDnyMůj } from "./logic/url";
+import { filtrujDotaženéAktivity, načtiRok } from "./slices/programDataSlice";
 import { nastavStateZUrl, nastavUrlZState } from "./slices/urlSlice";
 
+const indexŘazeníLinie = (klíč: string) => {
+  const index = GAMECON_KONSTANTY.PROGRAM_ŘAZENÍ_LINIE.findIndex(
+    (x) => x === klíč
+  );
 
-// TODO: logiku pro autofetch na začátek první vlny (nějak vizuálně komunikovat že stránka byla načtena)
+  return index !== -1 ? index : 1000;
+};
+
+// TODO: logiku pro autofetch na začátek první vlny
+// TODO: nějak vizuálně komunikovat že stránka je/byla načtena
 
 export const inicializujProgramStore = () => {
   // Načtu do stavu url
@@ -23,13 +33,20 @@ export const inicializujProgramStore = () => {
 
   useProgramStore.subscribe(s => !!s.přihlášenýUživatel.data.prihlasen, (přihlášen) => {
     useProgramStore.setState(s => {
-      s.urlStateMožnosti = tabulkaMožnostíUrlStateProgram({ přihlášen });
+      s.urlStateMožnosti.dny = urlStateProgramTabulkaMožnostíDnyMůj({ přihlášen });
+    });
+  });
+
+  useProgramStore.subscribe(s => s.data, (data) => {
+    useProgramStore.setState(s => {
+      s.urlStateMožnosti.linie = distinct(filtrujDotaženéAktivity(data.aktivityPodleId).map(x => x.linie))
+        .sort((a, b) => indexŘazeníLinie(a) - indexŘazeníLinie(b));
     });
   });
 
   const přihlášenýUživatelPřednačteno = window?.gameconPřednačtení?.přihlášenýUživatel;
   if (přihlášenýUživatelPřednačteno) {
-    useProgramStore.setState(s=>{
+    useProgramStore.setState(s => {
       s.přihlášenýUživatel.data = přihlášenýUživatelPřednačteno;
       console.log(přihlášenýUživatelPřednačteno);
     });
@@ -38,15 +55,15 @@ export const inicializujProgramStore = () => {
   const dataProgramString = localStorage.getItem(LOCAL_STORAGE_KLÍČE.DATA_PROGRAM);
   if (dataProgramString) {
     try {
-      useProgramStore.setState(s=>{
-        s.data =  JSON.parse(dataProgramString);
+      useProgramStore.setState(s => {
+        s.data = JSON.parse(dataProgramString);
       }, undefined, "načtení uložených dat");
-    }catch(e) {
+    } catch (e) {
       console.warn("nepodařilo se načíst data z local storage");
     }
   }
 
-  useProgramStore.subscribe(s=>s.data, (data)=>{
+  useProgramStore.subscribe(s => s.data, (data) => {
     localStorage.setItem(LOCAL_STORAGE_KLÍČE.DATA_PROGRAM, JSON.stringify(data));
   });
 

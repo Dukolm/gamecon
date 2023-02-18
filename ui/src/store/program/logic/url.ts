@@ -12,9 +12,10 @@ export type ProgramTabulkaVýběr =
   ;
 
 export type ProgramURLState = {
+  rok: number,
   výběr: ProgramTabulkaVýběr,
   aktivitaNáhledId?: number,
-  rok: number,
+  filtrLinie?: string[],
 }
 
 export const URL_STATE_VÝCHOZÍ_MOŽNOST = Object.freeze({
@@ -22,7 +23,14 @@ export const URL_STATE_VÝCHOZÍ_MOŽNOST = Object.freeze({
   datum: new Date(GAMECON_KONSTANTY.PROGRAM_OD),
 });
 
+export const URL_STATE_VÝCHOZÍ_STAV: ProgramURLState = Object.freeze({
+  rok: GAMECON_KONSTANTY.ROCNIK,
+  výběr: URL_STATE_VÝCHOZÍ_MOŽNOST,
+  aktivitaNáhledId: undefined,
+});
+
 const NÁHLED_QUERY_STRING = "idAktivityNahled";
+const LINIE_QUERY_STRING = "linie";
 
 export const parsujUrl = (url: string) => {
   const basePath = new URL(GAMECON_KONSTANTY.BASE_PATH_PAGE).pathname;
@@ -31,19 +39,26 @@ export const parsujUrl = (url: string) => {
 
   const den = urlObj.pathname.slice(basePath.length);
 
-  const výběr = tabulkaMožnostíUrlStateProgram({ přihlášen: true }).find(x => urlZTabulkaVýběr(x) === den) ?? URL_STATE_VÝCHOZÍ_MOŽNOST;
+  const výběr = urlStateProgramTabulkaMožnostíDnyMůj({ přihlášen: true }).find(x => urlZTabulkaVýběr(x) === den) ?? URL_STATE_VÝCHOZÍ_MOŽNOST;
   const urlState: ProgramURLState = {
     výběr,
     aktivitaNáhledId,
     rok: GAMECON_KONSTANTY.ROCNIK,
   };
+  try {
+    const linieRaw = urlObj.searchParams.get(LINIE_QUERY_STRING);
+    if (linieRaw) {
+      const linie = JSON.parse(decodeURIComponent(linieRaw));
+      urlState.filtrLinie = linie;
+    }
+  } catch (e) { console.error(`failed to parse ${urlObj.searchParams.get(LINIE_QUERY_STRING) ?? ""}`); }
   return urlState;
 };
 
 /** vytvoří url z aktuálního url-stavu nebo z předaného stavu */
 export const generujUrl = (urlState: ProgramURLState): string | undefined => {
   const výběr =
-    tabulkaMožnostíUrlStateProgram({ přihlášen: true }).find(x => porovnejTabulkaVýběr(x, urlState.výběr));
+    urlStateProgramTabulkaMožnostíDnyMůj({ přihlášen: true }).find(x => porovnejTabulkaVýběr(x, urlState.výběr));
 
   if (!výběr) return undefined;
 
@@ -54,13 +69,16 @@ export const generujUrl = (urlState: ProgramURLState): string | undefined => {
   if (urlState.aktivitaNáhledId)
     search.push(`${NÁHLED_QUERY_STRING}=${urlState.aktivitaNáhledId}`);
 
+  if (urlState.filtrLinie)
+    search.push(`${LINIE_QUERY_STRING}=${encodeURIComponent(JSON.stringify(urlState.filtrLinie))}`);
+
   if (search.length)
     url += "?" + search.join("&");
 
   return url;
 };
 
-export const tabulkaMožnostíUrlStateProgram = (props?: { přihlášen?: boolean }): ProgramTabulkaVýběr[] =>
+export const urlStateProgramTabulkaMožnostíDnyMůj = (props?: { přihlášen?: boolean }): ProgramTabulkaVýběr[] =>
   GAMECON_KONSTANTY.PROGRAM_DNY
     .map((den) => ({
       typ: "den",

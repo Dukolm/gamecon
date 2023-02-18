@@ -1,20 +1,21 @@
 import { ProgramStateCreator, useProgramStore } from "..";
-import { GAMECON_KONSTANTY } from "../../../env";
-import { generujUrl, parsujUrl, ProgramTabulkaVýběr, ProgramURLState, tabulkaMožnostíUrlStateProgram, URL_STATE_VÝCHOZÍ_MOŽNOST } from "../logic/url";
+import { generujUrl, parsujUrl, ProgramTabulkaVýběr, ProgramURLState, urlStateProgramTabulkaMožnostíDnyMůj, URL_STATE_VÝCHOZÍ_MOŽNOST, URL_STATE_VÝCHOZÍ_STAV } from "../logic/url";
 
 
 export type ProgramUrlSlice = {
   urlState: ProgramURLState
-  urlStateMožnosti: ProgramTabulkaVýběr[],
+  urlStateMožnosti: {
+    dny: ProgramTabulkaVýběr[],
+    linie: string[],
+  },
 }
 
 export const createProgramUrlSlice: ProgramStateCreator<ProgramUrlSlice> = () => ({
-  urlState: {
-    výběr: URL_STATE_VÝCHOZÍ_MOŽNOST,
-    aktivitaNáhledId: undefined,
-    rok: GAMECON_KONSTANTY.ROCNIK,
-  },
-  urlStateMožnosti: tabulkaMožnostíUrlStateProgram(),
+  urlState: URL_STATE_VÝCHOZÍ_STAV,
+  urlStateMožnosti: {
+    dny: urlStateProgramTabulkaMožnostíDnyMůj(),
+    linie: [],
+  }
 });
 
 
@@ -58,8 +59,25 @@ export const skryjAktivitaNáhledId = () => {
   });
 };
 
-export const nastavUrlVýběr = (možnost: ProgramTabulkaVýběr) =>{
+export const nastavUrlVýběr = (možnost: ProgramTabulkaVýběr) => {
   useProgramStore.setState((s) => {
     s.urlState.výběr = možnost;
   }, undefined, "nastav program den");
+};
+
+export const nastavFiltrLinie = (linie: string, hodnota: boolean) => {
+  useProgramStore.setState((s) => {
+    if (hodnota) {
+      const filtrLinie = s.urlState.filtrLinie ?? [];
+      if (!s.urlState.filtrLinie)
+        s.urlState.filtrLinie = filtrLinie;
+
+      filtrLinie.push(linie);
+      if (!s.urlStateMožnosti.linie.some(x => !filtrLinie.some(y => x === y))) {
+        s.urlState.filtrLinie = undefined;
+      }
+    } else {
+      s.urlState.filtrLinie = (s.urlState.filtrLinie ?? s.urlStateMožnosti.linie).filter(x => x !== linie);
+    }
+  }, undefined, "nastav program linie");
 };
