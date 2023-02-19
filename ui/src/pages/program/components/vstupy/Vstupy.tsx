@@ -7,11 +7,13 @@ import {
 } from "../../../../store/program/logic/url";
 import { nastavUrlVýběr } from "../../../../store/program/slices/urlSlice";
 import {
+  useFiltryOtevřené,
   useUrlState,
   useUrlStateMožnostiDny,
 } from "../../../../store/program/selektory";
 import { Filtry } from "./Filtry";
-import { useEffect, useState } from "preact/hooks";
+import { GAMECON_KONSTANTY } from "../../../../env";
+import { nastavFiltryOtevřené } from "../../../../store/program/slices/všeobecnéSlice";
 
 type ProgramUživatelskéVstupyProps = {};
 
@@ -22,12 +24,15 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
   const urlState = useUrlState();
   const urlStateMožnosti = useUrlStateMožnostiDny();
 
-  const [otevřeno, setOtevřeno] = useState(false);
+  const jeLetošníRočník = urlState.ročník === GAMECON_KONSTANTY.ROCNIK;
+
+
+  const filtryOtevřené = useFiltryOtevřené();
 
   return (
     <>
       <div class="program_hlavicka">
-        <h1>Program {urlState.rok}</h1>
+        <h1>Program {urlState.ročník}</h1>
         <div class="clearfix">
           <div class="program_dny">
             {urlStateMožnosti.map((možnost) => {
@@ -51,21 +56,21 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
                 >
                   {možnost.typ === "můj"
                     ? "můj program"
-                    : formátujDatum(možnost.datum)}
+                    : formátujDatum(možnost.datum, !jeLetošníRočník)}
                 </a>
               );
             })}
           </div>
           <button
-            class="program_filtry_tlacitko"
+            class={"program_filtry_tlacitko" + (filtryOtevřené ? " aktivni" : "")}
             onClick={() => {
-              setOtevřeno(!otevřeno);
+              nastavFiltryOtevřené(!filtryOtevřené);
             }}
           >
             Filtry
           </button>
         </div>
-        <Filtry {...{otevřeno}}/>
+        <Filtry {...{otevřeno: filtryOtevřené}}/>
       </div>
     </>
   );

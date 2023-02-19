@@ -5,6 +5,7 @@ import { LOCAL_STORAGE_KLÍČE } from "../localStorageKlíče";
 import { urlStateProgramTabulkaMožnostíDnyMůj } from "./logic/url";
 import { filtrujDotaženéAktivity, načtiRok } from "./slices/programDataSlice";
 import { nastavStateZUrl, nastavUrlZState } from "./slices/urlSlice";
+import { nastavFiltryOtevřené } from "./slices/všeobecnéSlice";
 
 const indexŘazeníLinie = (klíč: string) => {
   const index = GAMECON_KONSTANTY.PROGRAM_ŘAZENÍ_LINIE.findIndex(
@@ -41,6 +42,8 @@ export const inicializujProgramStore = () => {
     useProgramStore.setState(s => {
       s.urlStateMožnosti.linie = distinct(filtrujDotaženéAktivity(data.aktivityPodleId).map(x => x.linie))
         .sort((a, b) => indexŘazeníLinie(a) - indexŘazeníLinie(b));
+      s.urlStateMožnosti.tagy = distinct(filtrujDotaženéAktivity(data.aktivityPodleId).map(x => x.stitky).flat(1))
+        .sort();
     });
   });
 
@@ -67,10 +70,26 @@ export const inicializujProgramStore = () => {
     localStorage.setItem(LOCAL_STORAGE_KLÍČE.DATA_PROGRAM, JSON.stringify(data));
   });
 
-  const rok = useProgramStore.getState().urlState.rok;
-  void načtiRok(rok);
+  const urlState = useProgramStore.getState().urlState;
+  void načtiRok(urlState.ročník);
 
-  useProgramStore.subscribe(s => s.urlState.rok, (rok) => {
+  // ať máme vždy přednačtený aktuální ročník
+  if (urlState.ročník !== GAMECON_KONSTANTY.ROCNIK) {
+    setTimeout(() => {
+      void načtiRok(GAMECON_KONSTANTY.ROCNIK);
+    }, 2000);
+  }
+
+  useProgramStore.subscribe(s => s.urlState.ročník, (rok) => {
     void načtiRok(rok);
   });
+
+  if (
+    urlState.ročník !== GAMECON_KONSTANTY.ROCNIK
+    || urlState.filtrLinie?.length
+    || urlState.filtrTagy?.length
+    || urlState.filtrPřihlašovatelné
+  ) {
+    nastavFiltryOtevřené(true);
+  }
 };

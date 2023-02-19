@@ -12,10 +12,12 @@ export type ProgramTabulkaVýběr =
   ;
 
 export type ProgramURLState = {
-  rok: number,
+  ročník: number,
   výběr: ProgramTabulkaVýběr,
+  filtrPřihlašovatelné: boolean,
   aktivitaNáhledId?: number,
   filtrLinie?: string[],
+  filtrTagy?: string[],
 }
 
 export const URL_STATE_VÝCHOZÍ_MOŽNOST = Object.freeze({
@@ -24,18 +26,22 @@ export const URL_STATE_VÝCHOZÍ_MOŽNOST = Object.freeze({
 });
 
 export const URL_STATE_VÝCHOZÍ_STAV: ProgramURLState = Object.freeze({
-  rok: GAMECON_KONSTANTY.ROCNIK,
+  ročník: GAMECON_KONSTANTY.ROCNIK,
   výběr: URL_STATE_VÝCHOZÍ_MOŽNOST,
   aktivitaNáhledId: undefined,
+  filtrPřihlašovatelné: false,
 });
 
-const NÁHLED_QUERY_STRING = "idAktivityNahled";
-const LINIE_QUERY_STRING = "linie";
+const NÁHLED_QUERY_KEY = "idAktivityNahled";
+const LINIE_QUERY_KEY = "linie";
+const TAGY_QUERY_KEY = "tagy";
+const PŘIHLAŠOVATELNÉ_QUERY_KEY = "pouzePrihlasovatelne";
+const ROCNIK_QUERY_KEY = "rocnik";
 
 export const parsujUrl = (url: string) => {
   const basePath = new URL(GAMECON_KONSTANTY.BASE_PATH_PAGE).pathname;
   const urlObj = new URL(url, GAMECON_KONSTANTY.BASE_PATH_PAGE);
-  const aktivitaNáhledId = tryParseNumber(urlObj.searchParams.get(NÁHLED_QUERY_STRING));
+  const aktivitaNáhledId = tryParseNumber(urlObj.searchParams.get(NÁHLED_QUERY_KEY));
 
   const den = urlObj.pathname.slice(basePath.length);
 
@@ -43,15 +49,25 @@ export const parsujUrl = (url: string) => {
   const urlState: ProgramURLState = {
     výběr,
     aktivitaNáhledId,
-    rok: GAMECON_KONSTANTY.ROCNIK,
+    ročník: tryParseNumber(urlObj.searchParams.get(ROCNIK_QUERY_KEY)) ?? GAMECON_KONSTANTY.ROCNIK,
+    filtrPřihlašovatelné: urlObj.searchParams.get(PŘIHLAŠOVATELNÉ_QUERY_KEY) === "true",
   };
+
   try {
-    const linieRaw = urlObj.searchParams.get(LINIE_QUERY_STRING);
+    const linieRaw = urlObj.searchParams.get(LINIE_QUERY_KEY);
     if (linieRaw) {
       const linie = JSON.parse(decodeURIComponent(linieRaw));
       urlState.filtrLinie = linie;
     }
-  } catch (e) { console.error(`failed to parse ${urlObj.searchParams.get(LINIE_QUERY_STRING) ?? ""}`); }
+  } catch (e) { console.error(`failed to parse ${urlObj.searchParams.get(LINIE_QUERY_KEY) ?? ""}`); }
+  try {
+    const tagyRaw = urlObj.searchParams.get(TAGY_QUERY_KEY);
+    if (tagyRaw) {
+      const tagy = JSON.parse(decodeURIComponent(tagyRaw));
+      urlState.filtrTagy = tagy;
+    }
+  } catch (e) { console.error(`failed to parse ${urlObj.searchParams.get(TAGY_QUERY_KEY) ?? ""}`); }
+
   return urlState;
 };
 
@@ -66,11 +82,21 @@ export const generujUrl = (urlState: ProgramURLState): string | undefined => {
 
   const search: string[] = [];
 
+  if (urlState.ročník !== GAMECON_KONSTANTY.ROCNIK) 
+    search.push(`${ROCNIK_QUERY_KEY}=${urlState.ročník}`);
+
   if (urlState.aktivitaNáhledId)
-    search.push(`${NÁHLED_QUERY_STRING}=${urlState.aktivitaNáhledId}`);
+    search.push(`${NÁHLED_QUERY_KEY}=${urlState.aktivitaNáhledId}`);
 
   if (urlState.filtrLinie)
-    search.push(`${LINIE_QUERY_STRING}=${encodeURIComponent(JSON.stringify(urlState.filtrLinie))}`);
+    search.push(`${LINIE_QUERY_KEY}=${encodeURIComponent(JSON.stringify(urlState.filtrLinie))}`);
+
+  if (urlState.filtrTagy)
+    search.push(`${TAGY_QUERY_KEY}=${encodeURIComponent(JSON.stringify(urlState.filtrTagy))}`);
+
+  if (urlState.filtrPřihlašovatelné)
+    search.push(`${PŘIHLAŠOVATELNÉ_QUERY_KEY}=true`);
+
 
   if (search.length)
     url += "?" + search.join("&");
@@ -78,7 +104,7 @@ export const generujUrl = (urlState: ProgramURLState): string | undefined => {
   return url;
 };
 
-export const urlStateProgramTabulkaMožnostíDnyMůj = (props?: { přihlášen?: boolean }): ProgramTabulkaVýběr[] =>
+export const urlStateProgramTabulkaMožnostíDnyMůj = (props?: { přihlášen?: boolean, ročník?: number }): ProgramTabulkaVýběr[] =>
   GAMECON_KONSTANTY.PROGRAM_DNY
     .map((den) => ({
       typ: "den",
