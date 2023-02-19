@@ -11,6 +11,7 @@ import {
   useUrlStateMožnostiDny,
 } from "../../../../store/program/selektory";
 import { Filtry } from "./Filtry";
+import { useEffect, useState } from "preact/hooks";
 
 type ProgramUživatelskéVstupyProps = {};
 
@@ -20,6 +21,8 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
   const {} = props;
   const urlState = useUrlState();
   const urlStateMožnosti = useUrlStateMožnostiDny();
+
+  const [otevřeno, setOtevřeno] = useState(false);
 
   return (
     <>
@@ -53,8 +56,16 @@ export const ProgramUživatelskéVstupy: FunctionComponent<
               );
             })}
           </div>
-          <Filtry />
+          <button
+            class="program_filtry_tlacitko"
+            onClick={() => {
+              setOtevřeno(!otevřeno);
+            }}
+          >
+            Filtry
+          </button>
         </div>
+        <Filtry {...{otevřeno}}/>
       </div>
     </>
   );
