@@ -20,6 +20,9 @@ const asValueLabel = <T,>(obj: T) => ({
 });
 
 // TODO: můj program je nefiltrovaný - zašednout všechny controly ve filtry a lehce i tlačítko filtry
+// TODO: seřadí linie, tagy (přesune nahoru seznamu) podle den -> rok -> zbytek (možná i podle výskytů)
+// TODO: tlačítko křížek vedle tlačítka filtry které všechny smaže
+// TODO: mobilní zobrazení
 export const Filtry: FunctionComponent<TFiltryProps> = (props) => {
   const { otevřeno } = props;
 
