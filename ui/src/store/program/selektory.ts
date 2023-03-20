@@ -1,45 +1,31 @@
 import { useProgramStore } from ".";
 import { Pohlavi, PřihlášenýUživatel } from "../../api/přihlášenýUživatel";
+import { FiltrAktivit, filtrujAktivity } from "./logic/aktivity";
 import { ProgramTabulkaVýběr, ProgramURLState } from "./logic/url";
 import { Aktivita, filtrujDotaženéAktivity, jeAktivitaDotažená } from "./slices/programDataSlice";
 
-// TODO: přidat zbytek filtrů
-export const useAktivityFiltrované = (): Aktivita[] => {
+const useFiltrAktivit = (aktivitaFiltr?: FiltrAktivit) => {
   const urlState = useProgramStore((s) => s.urlState);
-  const aktivityRočníku = useProgramStore(
-    (s) => filtrujDotaženéAktivity(s.data.aktivityPodleId).filter(x => new Date(x.cas.od).getFullYear() === urlState.ročník)
-  );
 
-  let aktivityFiltrované = aktivityRočníku.filter((aktivita) =>
-    urlState.výběr.typ === "můj"
-      ? aktivita?.stavPrihlaseni != undefined
-      : new Date(aktivita.cas.od).getDay() === urlState.výběr.datum.getDay()
-  );
+  return aktivitaFiltr ?? (urlState as FiltrAktivit);
+};
 
-  const filtrLinie = urlState.filtrLinie;
-  
-  if (filtrLinie) {
-    aktivityFiltrované = aktivityFiltrované
-      .filter((aktivita) =>
-        filtrLinie.some(x => x === aktivita.linie)
-      );
-  }
+/**
+ * Všechny dotažené aktivity
+ */
+export const useAktivityDotažené = () => useProgramStore(
+  (s) => filtrujDotaženéAktivity(s.data.aktivityPodleId)
+);
 
-  const filtrTagy = urlState.filtrTagy;
-  
-  if (filtrTagy) {
-    aktivityFiltrované = aktivityFiltrované
-      .filter((aktivita) =>
-        filtrTagy.some(x => aktivita.stitky.some(stitek=>stitek===x))
-      );
-  }
+/**
+ * Aplikuje filtr na aktivity, pokud není předaný 
+ */
+export const useAktivityFiltrované = (aktivitaFiltr?: FiltrAktivit): Aktivita[] => {
+  const filtr = useFiltrAktivit(aktivitaFiltr);
 
-  if (urlState.filtrPřihlašovatelné) {
-    aktivityFiltrované = aktivityFiltrované
-      .filter((aktivita) =>
-        aktivita.prihlasovatelna && !aktivita.probehnuta
-      );
-  }
+  const aktivityDotažené = useAktivityDotažené();
+
+  const aktivityFiltrované = filtrujAktivity(aktivityDotažené, filtr);
 
   return aktivityFiltrované;
 };
@@ -57,6 +43,32 @@ export const useAktivitaNáhled = (): Aktivita | undefined =>
     return jeAktivitaDotažená(aktivita) ? aktivita : undefined;
   });
 
+/**
+ * Tagy s počtem aktivit které mají filtr daný ročník
+ */
+export const useTagySPočtemAktivit = () => {
+  const urlStateMožnosti = useUrlStateMožnosti();
+
+  const urlState = useProgramStore((s) => s.urlState);
+
+  const aktivvityRočník = useAktivityFiltrované({
+    ročník: urlState.ročník,
+  });
+
+  const tagy = urlStateMožnosti.tagy;
+
+  const tagyPočetVRočníku = new Map<string, number>(tagy.map(x => [x, 0] as [string, number]));
+
+  for (const aktivita of aktivvityRočník) {
+    for (const tag of aktivita.stitky) {
+      tagyPočetVRočníku.set(tag, (tagyPočetVRočníku.get(tag) ?? 0) + 1);
+    }
+  }
+
+  return Array.from(tagyPočetVRočníku).map(x => ({ tag: x[0], celkemVRočníku: x[1] }))
+    .sort((a, b) => b.celkemVRočníku - a.celkemVRočníku);
+};
+
 export const useUrlState = (): ProgramURLState => useProgramStore(s => s.urlState);
 export const useUrlVýběr = (): ProgramTabulkaVýběr => useProgramStore((s) => s.urlState.výběr);
 export const useUrlStateMožnostiDny = (): ProgramTabulkaVýběr[] => useProgramStore(s => s.urlStateMožnosti.dny);
@@ -65,5 +77,5 @@ export const useUrlStateMožnosti = () => useProgramStore(s => s.urlStateMožnos
 export const useUživatel = (): PřihlášenýUživatel => useProgramStore(s => s.přihlášenýUživatel.data);
 export const useUživatelPohlaví = (): Pohlavi | undefined => useProgramStore((s) => s.přihlášenýUživatel.data?.pohlavi);
 
-export const useFiltryOtevřené = (): boolean => useProgramStore(s=>s.všeobecné.filtryOtevřené);
+export const useFiltryOtevřené = (): boolean => useProgramStore(s => s.všeobecné.filtryOtevřené);
 

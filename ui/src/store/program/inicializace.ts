@@ -17,6 +17,7 @@ const indexŘazeníLinie = (klíč: string) => {
 
 // TODO: logiku pro autofetch na začátek první vlny
 // TODO: nějak vizuálně komunikovat že stránka je/byla načtena
+// TODO: logiku rozházet ke slicům
 
 export const inicializujProgramStore = () => {
   // Načtu do stavu url

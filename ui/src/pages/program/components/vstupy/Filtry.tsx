@@ -2,9 +2,18 @@ import { FunctionComponent } from "preact";
 import Select from "react-select";
 import { GAMECON_KONSTANTY, ROKY } from "../../../../env";
 import {
-  useUrlState, useUrlStateMožnosti,
+  useTagySPočtemAktivit,
+  useUrlState,
+  useUrlStateMožnosti,
 } from "../../../../store/program/selektory";
-import { nastavFiltrLinií, nastavFiltrPřihlašovatelné, nastavFiltrRočník, nastavFiltrTagů } from "../../../../store/program/slices/urlSlice";
+import {
+  nastavFiltrLinií,
+  nastavFiltrPřihlašovatelné,
+  nastavFiltrRočník,
+  nastavFiltrTagů,
+} from "../../../../store/program/slices/urlSlice";
+
+import "./ReactSelect.less";
 
 type TFiltryProps = {
   otevřeno: boolean;
@@ -14,10 +23,28 @@ const ROKY_OPTIONS = ROKY.concat(GAMECON_KONSTANTY.ROCNIK)
   .map((x) => ({ value: x, label: x }))
   .reverse();
 
-const asValueLabel = <T,>(obj: T) => ({
+type TValueLabel<T = any> = {
+  value: T;
+  label: T;
+  početMožností?: number;
+};
+
+const asValueLabel = <T,>(obj: T): TValueLabel<T> => ({
   value: obj,
   label: obj,
 });
+
+// TODO: zaobalit a vytáhnout Select do globálních komponent (vedle Overlay)
+
+// TODO: return type
+const formatOptionLabel = (data: TValueLabel) =>
+  <div class="react_select_option--container">
+    <span>{data.label}</span>
+    {data.početMožností !== undefined ? (
+      <span class="react_select_option--badge">{data.početMožností === 0 ? "-" : data.početMožností}</span>
+    ) : undefined}
+  </div> as any;
+
 
 // TODO: můj program je nefiltrovaný - zašednout všechny controly ve filtry a lehce i tlačítko filtry
 // TODO: seřadí linie, tagy (přesune nahoru seznamu) podle den -> rok -> zbytek (možná i podle výskytů)
@@ -30,7 +57,7 @@ export const Filtry: FunctionComponent<TFiltryProps> = (props) => {
 
   const urlStateMožnosti = useUrlStateMožnosti();
 
-  // nastavFiltrLinie();
+  const tagySPočtemAktivit = useTagySPočtemAktivit();
 
   return (
     <>
@@ -44,7 +71,9 @@ export const Filtry: FunctionComponent<TFiltryProps> = (props) => {
           <div style={{ width: "120px" }}>
             <Select
               value={asValueLabel(urlState.ročník)}
-              onChange={e=>{nastavFiltrRočník(e?.value);}}
+              onChange={(e) => {
+                nastavFiltrRočník(e?.value);
+              }}
               options={ROKY_OPTIONS}
             />
           </div>
@@ -61,15 +90,16 @@ export const Filtry: FunctionComponent<TFiltryProps> = (props) => {
             />
           </div>
           <div style={{ flex: "1" }}>
-            <Select
+            <Select<TValueLabel<string>, true>
               placeholder="Tagy"
-              options={urlStateMožnosti.tagy.map(asValueLabel)}
+              options={tagySPočtemAktivit.map(x=>({...asValueLabel(x.tag), početMožností:x.celkemVRočníku}))}
               isMulti
               closeMenuOnSelect={false}
               value={urlState.filtrTagy?.map(asValueLabel) ?? []}
               onChange={(e) => {
                 nastavFiltrTagů(e.map((x) => x.value));
               }}
+              formatOptionLabel={formatOptionLabel}
             />
           </div>
           <div style={{ minWidth: "300px" }} class="formular_polozka">
@@ -80,11 +110,17 @@ export const Filtry: FunctionComponent<TFiltryProps> = (props) => {
         <div>
           <button class="program_filtry_tlacitko">zvětšit</button>
           <button class="program_filtry_tlacitko">sdílej</button>
-          <button class={"program_filtry_tlacitko" + (urlState.filtrPřihlašovatelné ? " aktivni" : "")}
-          onClick={()=>{
-            nastavFiltrPřihlašovatelné(!urlState.filtrPřihlašovatelné);
-          }}
-          >Přihlašovatelné</button>
+          <button
+            class={
+              "program_filtry_tlacitko" +
+              (urlState.filtrPřihlašovatelné ? " aktivni" : "")
+            }
+            onClick={() => {
+              nastavFiltrPřihlašovatelné(!urlState.filtrPřihlašovatelné);
+            }}
+          >
+            Přihlašovatelné
+          </button>
           <button class="program_filtry_tlacitko">Detail</button>
         </div>
       </div>
