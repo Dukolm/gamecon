@@ -1,0 +1,10 @@
+{
+  "name": "@gamecon-page/obchod-nastaveni",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@gamecon/api": "*",
+    "@gamecon/core": "*"
+  }
+}

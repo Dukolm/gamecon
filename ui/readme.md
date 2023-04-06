@@ -1,4 +1,6 @@
-# Buildování:
+
+
+všechny příkazy co jsou zde vypsány se provolávají ve složce ui (v stejné jako je tohle readme)
 
 ## Prerekvizity
 
@@ -20,8 +22,13 @@ nasazování pořád buildovat)
 
 ## Buildování
 
+yarn workspaces build builduje vše
+
 - `yarn build` nebo `yarn dev` spustí buildování ui. Po buildu je nutné vždy stránku znovu načíst (Ctrl+Shift+R nebo
   Ctrl+F5 pro většinu prohlížečů)
+
+## Vývoj
+
 - `yarn dev`
     - zároveň sleduje změny a po každé provede build
     - zároveň spustí developement server
@@ -31,12 +38,16 @@ nasazování pořád buildovat)
           jiném místě než localhostu
 
 
-TODO:
-rozdělit do yarn workspaces, upravit buildování tak aby se vždycky buildovalo a dotahovalo co se používá (nedotahovat logiku obchod když otevírám program - sníží šanci že něco rozbiju např. v shopu když edituju program)
+Při vývoji je možné využívat rozšíření do prohlížeče **Redux DevTools** které umožní zobrazit interní stav a akce. Aby redux devtools fungovalo tak je třeba aby šlo o devserver a nebo je potřeba přidat do nastavení php řádek:
+```php
+define('FORCE_REDUX_DEVTOOLS', true);
+```
 
-TODO:
-zdokumentovat používání FORCE_REDUX_DEVTOOLS
-jak používat linter
+### Části kódu
+
+Kód se dělí na několik částí: api, komponenty/stránky, store
+
+TODO: [vite] http proxy error: vyhazuje když neběží gamecon
 
 TODO: guidlines nereferencovat nikde useProgramStore přímo místo toho využít selektory.ts a pro změny přímo změny ve slices
 

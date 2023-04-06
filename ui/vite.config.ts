@@ -1,18 +1,17 @@
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
-import * as path from 'path'
+
+// "./../web/soubory/ui"
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default ({outDir}) => defineConfig({
   plugins: [preact()],
   build: {
     target: "es6",
-    outDir: "./../web/soubory/ui",
-    // TODO: výstup půjde i nějak do web/soubory
-    // outDir: "./../admin/files/ui",
+    outDir,
     emptyOutDir: true,
     lib: {
-      entry: path.resolve(__dirname, 'src/main.ts'),
+      entry: 'src/index.ts',
       name: "script",
       fileName: () => "bundle.js",
       formats: ["iife"]
