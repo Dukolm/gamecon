@@ -963,9 +963,9 @@ SQL,
     }
 
     /** Odhlásí aktuálně přihlášeného uživatele, pokud není přihlášen, nic
-     * @param bool $back rovnou otočit na referrer?
+     * @param bool $naUvodniStranku
      */
-    public function odhlas($back = false)
+    public function odhlas($naUvodniStranku = true)
     {
         $a = $this->koncovkaDlePohlavi();
         $this->odhlasProTed();
@@ -973,7 +973,7 @@ SQL,
             setcookie('gcTrvalePrihlaseni', '', 0, '/');
         }
         oznameni("Byl$a jsi odhlášen$a");
-        if ($back) {
+        if ($naUvodniStranku) {
             back(URL_WEBU);
         }
     }
@@ -1651,7 +1651,7 @@ SQL,
      * @param DateTimeCz $datum
      * @return ?int
      */
-    public function vekKDatu(DateTimeCz $datum): ?int
+    public function vekKDatu(DateTimeInterface $datum): ?int
     {
         if ($this->r['datum_narozeni'] == '0000-00-00') {
             return null;
