@@ -50,8 +50,8 @@ $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-nahled/program-n
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-posuv/program-posuv.js');
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/_spolecne/zachovej-scroll.js');
 
-$zacatekPrvniVlnyOd       = $systemoveNastaveni->prvniVlnaKdy();
-$zacatekPrvniVlnyZaSekund = $zacatekPrvniVlnyOd->getTimestamp() - $systemoveNastaveni->ted()->getTimestamp();
+$prvniVlnaKdy             = $systemoveNastaveni->prvniVlnaKdy();
+$zacatekPrvniVlnyZaSekund = $prvniVlnaKdy->getTimestamp() - $systemoveNastaveni->ted()->getTimestamp();
 
 $legendaText   = Stranka::zUrl('program-legenda-text')->html();
 $jeOrganizator = isset($u) && $u && $u->maPravo(Pravo::PORADANI_AKTIVIT);

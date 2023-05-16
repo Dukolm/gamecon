@@ -121,9 +121,9 @@ class DateTimeGameconTest extends TestCase
     }
 
     /**
-     * @dataProvider provideZacatekPrvniVlnyOd
+     * @dataProvider providePrvniVlnaKdy
      */
-    public function testZacatekPrvniVlnyOd(int $rocnik, string $ocekavanyZacatek) {
+    public function testPrvniVlnaKdy(int $rocnik, string $ocekavanyZacatek) {
         self::assertEquals(
             DateTimeGamecon::createFromMysql($ocekavanyZacatek),
             DateTimeGamecon::spoctejKdyJePrvniVlna($rocnik),
@@ -138,7 +138,7 @@ class DateTimeGameconTest extends TestCase
         }
     }
 
-    public static function provideZacatekPrvniVlnyOd(): array {
+    public static function providePrvniVlnaKdy(): array {
         return [
 //            'současný ročník' => [ROCNIK, PRVNI_VLNA_KDY],
             '2023' => [2023, '2023-05-18 20:23:00'],
