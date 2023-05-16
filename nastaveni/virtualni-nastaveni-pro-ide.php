@@ -36,3 +36,9 @@ const BONUS_ZA_6H_AZ_7H_AKTIVITU            = 0;
 const BONUS_ZA_8H_AZ_9H_AKTIVITU            = 0;
 const BONUS_ZA_10H_AZ_11H_AKTIVITU          = 0;
 const BONUS_ZA_12H_AZ_13H_AKTIVITU          = 0;
+
+const PRISTI_VLNA_AKTIVIT_KDY = null;
+
+const PRUMERNE_LONSKE_VSTUPNE = 0.0;
+
+const POSILAT_MAIL_O_ODHLASENI_A_UVOLNENEM_UBYTOVANI = false;

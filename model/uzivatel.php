@@ -14,6 +14,8 @@ use Gamecon\Uzivatel\Exceptions\DuplicitniEmail;
 use Gamecon\Uzivatel\Exceptions\DuplicitniLogin;
 use Gamecon\Cas\DateTimeGamecon;
 use Gamecon\Uzivatel\Finance;
+use Gamecon\Uzivatel\Pohlavi;
+use Gamecon\Uzivatel\SqlStruktura\UzivatelSqlStruktura as Sql;
 
 /**
  * Třída popisující uživatele a jeho vlastnosti
@@ -33,16 +35,38 @@ class Uzivatel extends DbObject
     public const SYSTEM       = 1;   // id uživatele reprezentujícího systém (např. "operaci provedl systém")
     public const SYSTEM_LOGIN = 'SYSTEM';
 
+    public const TYPY_DOKLADU     = [
+        self::TYP_DOKLADU_OP,
+        self::TYP_DOKLADU_PAS,
+        self::TYP_DOKLADU_JINY,
+    ];
+    public const TYP_DOKLADU_OP   = 'op';
+    public const TYP_DOKLADU_PAS  = 'pas';
+    public const TYP_DOKLADU_JINY = 'jiny';
+
     private ?array $organizovaneAktivityIds = null;
+    private ?array $historiePrihlaseni      = null;
+
+    public static function povinneUdajeProRegistraci(): array
+    {
+        return [
+            Sql::JMENO_UZIVATELE    => 'Jméno',
+            Sql::PRIJMENI_UZIVATELE => 'Příjmení',
+            Sql::TELEFON_UZIVATELE  => 'Telefon',
+            Sql::EMAIL1_UZIVATELE   => 'E-mail',
+            Sql::LOGIN_UZIVATELE    => 'Přezdívka',
+        ];
+    }
 
     /**
      * @return Uzivatel[]
      */
-    public static function vsichni(): array {
+    public static function vsichni(): array
+    {
         $ids = dbOneArray(<<<SQL
 SELECT DISTINCT uzivatele_hodnoty.id_uzivatele
 FROM uzivatele_hodnoty
-SQL
+SQL,
         );
         return static::zIds($ids);
     }
@@ -50,7 +74,8 @@ SQL
     /**
      * @return Uzivatel[]
      */
-    public static function poradateleAktivit(): array {
+    public static function poradateleAktivit(): array
+    {
         $ids = dbOneArray(<<<SQL
 SELECT DISTINCT uzivatele_hodnoty.id_uzivatele
 FROM uzivatele_hodnoty
@@ -58,22 +83,23 @@ JOIN platne_role_uzivatelu ON uzivatele_hodnoty.id_uzivatele = platne_role_uziva
 JOIN prava_role ON platne_role_uzivatelu.id_role = prava_role.id_role
 WHERE prava_role.id_prava = $1
 SQL
-            , [Pravo::PORADANI_AKTIVIT]
+            , [\Gamecon\Pravo::PORADANI_AKTIVIT],
         );
         return static::zIds($ids);
     }
 
-    protected $aktivityJakoSledujici; // pole s klíči id aktvit, kde je jako sledující
-    protected $klic = '';
-    protected $idsRoli;         // pole s klíči id židlí uživatele
+    protected        $aktivityJakoSledujici; // pole s klíči id aktvit, kde je jako sledující
+    protected        $klic       = '';
+    protected        $idsRoli;         // pole s klíči id židlí uživatele
     protected ?array $medailonek = null;
-    protected $finance;
-    protected $shop;
+    protected        $finance;
+    protected        $shop;
 
-    private $kdySeRegistrovalNaLetosniGc;
+    private                    $kdySeRegistrovalNaLetosniGc;
     private SystemoveNastaveni $systemoveNastaveni;
 
-    public function __construct(array $uzivatel, SystemoveNastaveni $systemoveNastaveni = null) {
+    public function __construct(array $uzivatel, SystemoveNastaveni $systemoveNastaveni = null)
+    {
         if (is_array($uzivatel) && array_keys_exist(['id_uzivatele', 'login_uzivatele', 'pohlavi'], $uzivatel)) {
             $this->r = $uzivatel;
             parent::__construct($uzivatel);
@@ -86,12 +112,14 @@ SQL
     /**
      * @return string adresa uživatele ve formátu Město, Ulice ČP, PSČ, stát
      */
-    public function adresa() {
+    public function adresa()
+    {
         $adresa = $this->r['mesto_uzivatele'] . ', ' . $this->r['ulice_a_cp_uzivatele'] . ', ' . $this->r['psc_uzivatele'] . ', ' . $this->stat();
         return $adresa;
     }
 
-    public function ubytovanS(string $ubytovanS = null): string {
+    public function ubytovanS(string $ubytovanS = null): string
+    {
         if ($ubytovanS !== null) {
             $this->r['ubytovan_s'] = $ubytovanS;
         }
@@ -103,7 +131,8 @@ SQL
      * default avatar. Pomocí adresy je docíleno, aby se při nezměně obrázku dalo
      * cacheovat.
      */
-    public function avatar() {
+    public function avatar()
+    {
         $soubor = WWW . '/soubory/systemove/avatary/' . $this->id() . '.jpg';
         if (is_file($soubor))
             return Nahled::zSouboru($soubor)->pasuj(null, 100);
@@ -114,7 +143,8 @@ SQL
     /**
      * Vrátí defaultní avatar
      */
-    public static function avatarDefault() {
+    public static function avatarDefault()
+    {
         return URL_WEBU . '/soubory/systemove/avatary/default.png';
     }
 
@@ -127,7 +157,8 @@ SQL
      * fungovalo
      * @return bool true pokud se obrázek nahrál a uložil, false jinak
      */
-    public function avatarNactiPost($name) {
+    public function avatarNactiPost($name)
+    {
         try {
             $o = Obrazek::zSouboru($_FILES[$name]['tmp_name']);
         } catch (Exception $e) {
@@ -139,7 +170,8 @@ SQL
     }
 
     /** Smaže avatar uživatele. (jen uživatelská část webu) */
-    public function avatarSmaz() {
+    public function avatarSmaz()
+    {
         if (is_file('./soubory/systemove/avatary/' . $this->id() . '.jpg'))
             return unlink('./soubory/systemove/avatary/' . $this->id() . '.jpg');
         else
@@ -149,18 +181,19 @@ SQL
     /**
      * Vrátí / nastaví číslo občanského průkazu.
      */
-    public function cisloOp($op = null) {
+    public function cisloOp(string $op = null)
+    {
         if ($op) {
             dbQuery('
         UPDATE uzivatele_hodnoty
         SET op=$1
         WHERE id_uzivatele=' . $this->r['id_uzivatele'],
-                [Sifrovatko::zasifruj($op)]
+                [Sifrovatko::zasifruj($op)],
             );
             return $op;
         }
 
-        if ($this->r['op']) {
+        if (!empty($this->r['op'])) {
             return Sifrovatko::desifruj($this->r['op']);
         } else {
             return '';
@@ -170,7 +203,8 @@ SQL
     /**
      * Vrátí datum narození uživatele jako DateTime
      */
-    public function datumNarozeni(): DateTimeCz {
+    public function datumNarozeni(): DateTimeCz
+    {
         if ((int)$this->r['datum_narozeni']) //hack, neplatný formát je '0000-00-00'
             return new DateTimeCz($this->r['datum_narozeni']);
         else
@@ -180,7 +214,8 @@ SQL
     /**
      * Přidá uživateli roli (posadí uživatele na roli)
      */
-    public function pridejRoli(int $idRole, Uzivatel $posadil) {
+    public function pridejRoli(int $idRole, Uzivatel $posadil)
+    {
         if ($this->maRoli($idRole)) {
             return;
         }
@@ -194,7 +229,7 @@ SQL
         $result = dbQuery(
             "INSERT IGNORE INTO uzivatele_role(id_uzivatele, id_role, posadil)
             VALUES ($1, $2, $3)",
-            [$this->id(), $idRole, $posadil->id()]
+            [$this->id(), $idRole, $posadil->id()],
         );
         if (dbAffectedOrNumRows($result) > 0) {
             $this->zalogujZmenuRole($idRole, $posadil->id(), self::POSAZEN);
@@ -204,14 +239,16 @@ SQL
     }
 
     /** Vrátí profil uživatele pro DrD */
-    public function drdProfil() {
+    public function drdProfil()
+    {
         return $this->medailonek() ? $this->medailonek()->drd() : null;
     }
 
     /**
      * @return array pole "titulů" u organizátora DrD
      */
-    public function drdTituly() {
+    public function drdTituly()
+    {
         $tituly = ['Pán Jeskyně', 'vypravěč'];
         if ($this->maPravo(Pravo::TITUL_ORGANIZATOR)) $tituly[] = 'organizátor GC';
         return $tituly;
@@ -220,7 +257,8 @@ SQL
     /**
      * @return Finance finance daného uživatele
      */
-    public function finance(): Finance {
+    public function finance(): Finance
+    {
         //pokud chceme finance poprvé, spočteme je a uložíme
         if (!$this->finance) {
             $this->finance = new Finance(
@@ -233,7 +271,8 @@ SQL
     }
 
     /** Vrátí objekt Náhled s fotkou uživatele nebo null */
-    public function fotka(): ?Nahled {
+    public function fotka(): ?Nahled
+    {
         $soubor = WWW . '/soubory/systemove/fotky/' . $this->id() . '.jpg';
         if (is_file($soubor)) {
             return Nahled::zSouboru($soubor);
@@ -242,12 +281,13 @@ SQL
     }
 
     /** Vrátí objekt Náhled s fotkou uživatele nebo výchozí fotku */
-    public function fotkaAuto(): ?Nahled {
+    public function fotkaAuto(): ?Nahled
+    {
         $f = $this->fotka();
         if ($f) {
             return $f;
         }
-        if ($this->pohlavi() === 'f') {
+        if ($this->pohlavi() === Pohlavi::ZENA_KOD) {
             return Nahled::zSouboru(WWW . '/soubory/styl/fotka-holka.jpg');
         }
         return Nahled::zSouboru(WWW . '/soubory/styl/fotka-kluk.jpg');
@@ -266,8 +306,9 @@ SQL
         string    $zdrojOdhlaseni,
         Uzivatel  $odhlasujici,
         Zaznamnik $zaznamnik = null,
-        bool      $odeslatMailPokudSeNeodhlasilSam = true
-    ): bool {
+        bool      $odeslatMailPokudSeNeodhlasilSam = true,
+    ): bool
+    {
         if (!$this->gcPrihlasen()) {
             return false;
         }
@@ -284,7 +325,7 @@ SQL
                 $this,
                 $odhlasujici,
                 $zdrojOdhlaseni,
-                Aktivita::NEPOSILAT_MAILY_SLEDUJICIM /* nechceme posílat maily sledujícím, že se uvolnilo místo */
+                Aktivita::NEPOSILAT_MAILY_SLEDUJICIM, /* nechceme posílat maily sledujícím, že se uvolnilo místo */
             );
         }
 
@@ -308,7 +349,8 @@ SQL
         Uzivatel   $odhlasujici,
         ?Zaznamnik $zaznamnik,
         bool       $odeslatMailPokudSeNeodhlasilSam,
-    ) {
+    )
+    {
         // odeslání upozornění, pokud u nás má peníze
         if (($celkemLetosPoslal = $this->finance()->sumaPlateb()) > 0) {
             $mailOdhlasilAlePlatil = $this->mailOdhlasilAlePlatil($celkemLetosPoslal, $odhlasujici);
@@ -323,7 +365,9 @@ SQL
             if ($zaznamnik) {
                 $zaznamnik->uchovejZEmailu($mailMelUbytovani);
             } else {
-                $mailMelUbytovani->odeslat();
+                if ($this->systemoveNastaveni->poslatMailZeBylOdhlasenAMelUbytovani()) {
+                    $mailMelUbytovani->odeslat();
+                }
             }
         }
         if ($odeslatMailPokudSeNeodhlasilSam && $this->id() !== $odhlasujici->id()) {
@@ -336,7 +380,8 @@ SQL
         }
     }
 
-    private function mailOdhlasilAlePlatil(float $celkemLetosPoslal, Uzivatel $odhlasujici): GcMail {
+    private function mailOdhlasilAlePlatil(float $celkemLetosPoslal, Uzivatel $odhlasujici): GcMail
+    {
         $odhlasen = $this->id() === $odhlasujici->id()
             ? ' se odhlásil'
             : 'byl odhlášen';
@@ -351,12 +396,13 @@ SQL
                     $this->id(),
                     $odhlasen,
                     $this->systemoveNastaveni->rocnik(),
-                    $celkemLetosPoslal
-                )
+                    $celkemLetosPoslal,
+                ),
             );
     }
 
-    private function mailZeBylOdhlasenAMelUbytovani(array $dnyUbytovani, Uzivatel $odhlasujici): GcMail {
+    private function mailZeBylOdhlasenAMelUbytovani(array $dnyUbytovani, Uzivatel $odhlasujici): GcMail
+    {
         $odhlasen = $this->id() === $odhlasujici->id()
             ? ' se odhlásil'
             : 'byl odhlášen';
@@ -371,16 +417,17 @@ SQL
                     $this->id(),
                     $odhlasen,
                     $this->systemoveNastaveni->rocnik(),
-                    implode(', ', $dnyUbytovani)
-                )
+                    implode(', ', $dnyUbytovani),
+                ),
             );
     }
 
-    private function mailZeBylOdhlasen(): GcMail {
+    private function mailZeBylOdhlasen(): GcMail
+    {
         $rok                             = $this->systemoveNastaveni->rocnik();
         $nejblizsiHromadneOdhlasovaniKdy = DateTimeGamecon::nejblizsiVlnaKdy(
             $this->systemoveNastaveni,
-            $this->systemoveNastaveni->ted()
+            $this->systemoveNastaveni->ted(),
         );
         $uvod                            = 'Právě jsme tě odhlásili z letošního Gameconu.';
         $oddelovac                       = str_repeat('═', mb_strlen($uvod));
@@ -396,7 +443,7 @@ SQL
                 $oddelovac
 
                 Pokud jsi platbu zapomněl{$a} poslat, přihlaš se zpět v další vlně aktivit, která bude {$nejblizsiHromadneOdhlasovaniKdy->formatCasStandard()} a platbu ohlídej.
-                TEXT
+                TEXT,
             );
     }
 
@@ -404,12 +451,13 @@ SQL
      * @param int|null $rok
      * @return Aktivita[]
      */
-    public function organizovaneAktivity(int $rok = null): array {
+    public function organizovaneAktivity(int $rok = null): array
+    {
         $rok ??= $this->systemoveNastaveni->rocnik();
 
         return Aktivita::zFiltru(
             ['rok' => $rok, 'organizator' => $this->id()],
-            ['zacatek']
+            ['zacatek'],
         );
     }
 
@@ -417,7 +465,8 @@ SQL
      * @param int|null $rok
      * @return Aktivita[]
      */
-    public function aktivityRyzePrihlasene(int $rok = null): array {
+    public function aktivityRyzePrihlasene(int $rok = null): array
+    {
         $rok ??= $this->systemoveNastaveni->rocnik();
         $ids = dbOneArray(<<<SQL
 SELECT akce_prihlaseni.id_akce
@@ -427,7 +476,7 @@ WHERE akce_prihlaseni.id_uzivatele = $1
 AND akce_prihlaseni.id_stavu_prihlaseni = $2
 AND akce_seznam.rok = $3
 SQL,
-            [$this->id(), StavPrihlaseni::PRIHLASEN, $rok]
+            [$this->id(), StavPrihlaseni::PRIHLASEN, $rok],
         );
 
         return Aktivita::zIds($ids);
@@ -437,7 +486,8 @@ SQL,
      * @param int|null $rok
      * @return Aktivita[]
      */
-    public function zapsaneAktivity(int $rok = null): array {
+    public function zapsaneAktivity(int $rok = null): array
+    {
         $rok ??= $this->systemoveNastaveni->rocnik();
         $ids = dbOneArray(<<<SQL
 SELECT akce_prihlaseni.id_akce
@@ -446,13 +496,14 @@ JOIN akce_seznam on akce_prihlaseni.id_akce = akce_seznam.id_akce
 WHERE akce_prihlaseni.id_uzivatele = $1
 AND akce_seznam.rok = $2
 SQL,
-            [$this->id(), $rok]
+            [$this->id(), $rok],
         );
         return Aktivita::zIds($ids);
     }
 
     /** „Odjede“ uživatele z GC */
-    public function gcOdjed(Uzivatel $editor) {
+    public function gcOdjed(Uzivatel $editor)
+    {
         if (!$this->gcPritomen()) {
             throw new Chyba('Uživatel není přítomen na GC');
         }
@@ -460,7 +511,8 @@ SQL,
     }
 
     /** Opustil uživatel GC? */
-    public function gcOdjel() {
+    public function gcOdjel()
+    {
         if (!$this->gcPritomen()) {
             return false; // ani nedorazil, nemohl odjet
         }
@@ -468,12 +520,14 @@ SQL,
     }
 
     /** Je uživatel přihlášen na aktuální GC? */
-    public function gcPrihlasen() {
+    public function gcPrihlasen()
+    {
         return $this->maRoli(Role::PRIHLASEN_NA_LETOSNI_GC);
     }
 
     /** Příhlásí uživatele na GC */
-    public function gcPrihlas(Uzivatel $editor) {
+    public function gcPrihlas(Uzivatel $editor)
+    {
         if ($this->gcPrihlasen()) {
             return;
         }
@@ -483,14 +537,16 @@ SQL,
 
     /** Prošel uživatel infopultem, dostal materiály a je nebo byl přítomen na aktuálím
      *  GC? */
-    public function gcPritomen() {
+    public function gcPritomen()
+    {
         return $this->maRoli(Role::PRITOMEN_NA_LETOSNIM_GC);
     }
 
     /**
      * Nastaví nové heslo (pouze setter)
      */
-    public function heslo($noveHeslo) {
+    public function heslo($noveHeslo)
+    {
         $novyHash = password_hash($noveHeslo, PASSWORD_DEFAULT);
         dbQuery('UPDATE uzivatele_hodnoty SET heslo_md5 = $1 WHERE id_uzivatele = $2', [$novyHash, $this->id()]);
     }
@@ -498,7 +554,8 @@ SQL,
     /**
      * @return int[] roky, kdy byl přihlášen na GC
      */
-    public function historiePrihlaseni() {
+    public function historiePrihlaseni()
+    {
         if (!isset($this->historiePrihlaseni)) {
             $ucast                    = Role::TYP_UCAST;
             $prihlasen                = Role::VYZNAM_PRIHLASEN;
@@ -520,27 +577,32 @@ SQL,
     }
 
     /** Jméno a příjmení uživatele v běžném (zákonném) tvaru */
-    public function jmeno() {
+    public function jmeno()
+    {
         return trim($this->r['jmeno_uzivatele'] . ' ' . $this->r['prijmeni_uzivatele']);
     }
 
     /** Vrátí řetězec s jménem i nickemu uživatele jak se zobrazí např. u
      *  organizátorů aktivit */
-    public function jmenoNick() {
+    public function jmenoNick()
+    {
         return self::jmenoNickZjisti($this->r);
     }
 
-    public function nick(): string {
+    public function nick(): string
+    {
         return strpos($this->r['login_uzivatele'], '@') === false
             ? $this->r['login_uzivatele']
             : '';
     }
 
-    public function nickNeboKrestniJmeno(): string {
+    public function nickNeboKrestniJmeno(): string
+    {
         return $this->nick() ?: $this->krestniJmeno() ?: $this->jmeno();
     }
 
-    public function krestniJmeno(): string {
+    public function krestniJmeno(): string
+    {
         return trim($this->r['jmeno_uzivatele'] ?: '');
     }
 
@@ -552,7 +614,8 @@ SQL,
      * samy, aby nemusely zbytečně načítat celého uživatele. Pokud je to
      * výkonnostně ok, raději se tomu vyhnout a uživatele načíst.
      */
-    public static function jmenoNickZjisti(array $r) {
+    public static function jmenoNickZjisti(array $r)
+    {
         if (!empty($r['jmeno_uzivatele']) && !empty($r['prijmeni_uzivatele'])) {
             $celeJmeno = $r['jmeno_uzivatele'] . ' ' . $r['prijmeni_uzivatele'];
             $jeMail    = strpos($r['login_uzivatele'], '@') !== false;
@@ -568,39 +631,43 @@ SQL,
      * Vrátí koncovku "a" pro holky (resp. "" pro kluky)
      * @deprecated use \Uzivatel::koncovkaDlePohlavi instead
      */
-    public function koncA(): string {
-        return ($this->pohlavi() === 'f')
+    public function koncA(): string
+    {
+        return ($this->pohlavi() === Pohlavi::ZENA_KOD)
             ? 'a'
             : '';
     }
 
     /** Vrátí koncovku "a" pro holky (resp. "" pro kluky) */
-    public function koncovkaDlePohlavi(string $koncovkaProZeny = 'a'): string {
-        return ($this->pohlavi() === 'f')
-            ? $koncovkaProZeny
-            : '';
+    public function koncovkaDlePohlavi(string $koncovkaProZeny = 'a'): string
+    {
+        return Pohlavi::koncovkaDlePohlavi($this->pohlavi(), $koncovkaProZeny);
     }
 
     /** Vrátí primární mailovou adresu uživatele */
-    public function mail() {
+    public function mail()
+    {
         return $this->r['email1_uzivatele'];
     }
 
     /**
      * @return string[] povinné údaje které chybí
      */
-    public function chybejiciUdaje(array $povinneUdaje) {
+    public function chybejiciUdaje(array $povinneUdaje)
+    {
         $validator = function (string $sloupec) {
             return empty($this->r[$sloupec]);
         };
         return array_filter($povinneUdaje, $validator, ARRAY_FILTER_USE_KEY);
     }
 
-    public function maPravo($pravo): bool {
+    public function maPravo($pravo): bool
+    {
         return in_array($pravo, $this->prava());
     }
 
-    public function maPravoNaPrirazeniRole(int $idRole): bool {
+    public function maPravoNaPrirazeniRole(int $idRole): bool
+    {
         $role = Role::zId($idRole, true);
         if (!$role) {
             return false;
@@ -608,7 +675,8 @@ SQL,
         return $this->maPravoNaZmenuKategorieRole($role->kategorieRole());
     }
 
-    public function maPravoNaZmenuKategorieRole(int $kategorieRole): bool {
+    public function maPravoNaZmenuKategorieRole(int $kategorieRole): bool
+    {
         return match ($kategorieRole) {
             Role::KATEGORIE_OMEZENA => $this->maRoli(Role::CLEN_RADY),
             Role::KATEGORIE_BEZNA => true,
@@ -618,79 +686,117 @@ SQL,
         };
     }
 
-    public function maPravoNaZmenuPrav(): bool {
+    public function maPravoNaZmenuPrav(): bool
+    {
         return $this->maPravo(Pravo::ZMENA_PRAV);
     }
 
-    public function maPravoNaPristupDoPrezence(): bool {
+    public function maPravoNaPristupDoPrezence(): bool
+    {
         return $this->maPravo(Pravo::ADMINISTRACE_PREZENCE);
+    }
+
+    public function maPravoNaKostkuZdarma(): bool
+    {
+        return $this->maPravo(Pravo::KOSTKA_ZDARMA);
+    }
+
+    public function maPravoNaUbytovaniZdarma(): bool
+    {
+        return $this->maPravo(Pravo::UBYTOVANI_ZDARMA);
+    }
+
+    public function maPravoNaJidloZdarma(): bool
+    {
+        return $this->maPravo(Pravo::JIDLO_ZDARMA);
     }
 
     /**
      * Což taky znamená "Právo na placení až na místě"
      * @return bool
      */
-    public function maPravoNerusitObjednavky(): bool {
+    public function maPravoNerusitObjednavky(): bool
+    {
         return $this->maPravo(Pravo::NERUSIT_AUTOMATICKY_OBJEDNAVKY);
     }
 
-    public function nemaPravoNaBonusZaVedeniAktivit(): bool {
+    public function nemaPravoNaBonusZaVedeniAktivit(): bool
+    {
         return $this->maPravo(Pravo::BEZ_SLEVY_ZA_VEDENI_AKTIVIT);
     }
 
-    public function maPravoNaBonusZaVedeniAktivit(): bool {
+    public function maPravoNaBonusZaVedeniAktivit(): bool
+    {
         return !$this->nemaPravoNaBonusZaVedeniAktivit();
     }
 
-    public function maPravoNaPoradaniAktivit(): bool {
+    public function maPravoNaPoradaniAktivit(): bool
+    {
         return $this->maPravo(Pravo::PORADANI_AKTIVIT);
     }
 
-    public function maPravoNaStrankuFinance(): bool {
+    public function maPravoNaStrankuFinance(): bool
+    {
         return $this->maPravo(Pravo::ADMINISTRACE_FINANCE);
     }
 
-    public function maPravoNaZmenuHistorieAktivit(): bool {
+    public function maPravoNaZmenuHistorieAktivit(): bool
+    {
         return $this->maPravo(Pravo::ZMENA_HISTORIE_AKTIVIT);
     }
 
-    public function jeBrigadnik(): bool {
+    public function maPravoNaPrihlasovaniNaDosudNeotevrene(): bool
+    {
+        return $this->maPravo(Pravo::PRIHLASOVANI_NA_DOSUD_NEOTEVRENE);
+    }
+
+    public function jeBrigadnik(): bool
+    {
         return $this->maRoli(Role::LETOSNI_BRIGADNIK);
     }
 
-    public function jeZazemi(): bool {
+    public function jeZazemi(): bool
+    {
         return $this->maRoli(Role::LETOSNI_ZAZEMI);
     }
 
-    public function jeDobrovolnikSenior(): bool {
+    public function jeDobrovolnikSenior(): bool
+    {
         return $this->maRoli(Role::LETOSNI_DOBROVOLNIK_SENIOR);
     }
 
-    public function jeVypravec(): bool {
+    public function jeVypravec(): bool
+    {
         return $this->maRoli(Role::LETOSNI_VYPRAVEC);
     }
 
-    public function jeOrganizator(): bool {
+    public function jeOrganizator(): bool
+    {
         return Role::obsahujiOrganizatora($this->dejIdsRoli());
     }
 
-    public function jePartner(): bool {
+    public function jePartner(): bool
+    {
         return $this->maRoli(Role::LETOSNI_PARTNER);
     }
 
-    public function jeInfopultak(): bool {
+    public function jeInfopultak(): bool
+    {
         return $this->maRoli(Role::LETOSNI_INFOPULT);
     }
 
-    public function jeHerman(): bool {
+    public function jeHerman(): bool
+    {
         return $this->maRoli(Role::LETOSNI_HERMAN);
     }
 
-    public function jeSpravceFinanci(): bool {
+    public function jeSpravceFinanci(): bool
+    {
         return $this->maRoli(Role::CFO);
     }
 
-    public function jeSuperAdmin(): bool {
+    public function jeSuperAdmin(): bool
+    {
         if (!defined('SUPERADMINI') || !is_array(SUPERADMINI)) {
             return false;
         }
@@ -705,7 +811,8 @@ SQL,
      * @return bool jestli se uživatel v daném čase neúčastní / neorganizuje
      *  žádnou aktivitu (případně s výjimkou $ignorovanaAktivita)
      */
-    public function maVolno(DateTimeInterface $od, DateTimeInterface $do, Aktivita $ignorovanaAktivita = null, bool $jenPritomen = false) {
+    public function maVolno(DateTimeInterface $od, DateTimeInterface $do, Aktivita $ignorovanaAktivita = null, bool $jenPritomen = false)
+    {
         // právo na překrytí aktivit dává volno vždy automaticky
         // TODO zkontrolovat, jestli vlastníci práva dřív měli někdy paralelně i účast nebo jen organizovali a pokud jen organizovali, vyhodit test odsud a vložit do kontroly kdy se ukládá aktivita
         if ($this->maPravo(Pravo::PREKRYVANI_AKTIVIT)) {
@@ -731,7 +838,8 @@ SQL,
      * @param bool $jenPritomen
      * @return bool
      */
-    private function maCasovouKolizi(array $aktivity, DateTimeInterface $od, DateTimeInterface $do, ?Aktivita $ignorovanaAktivita, bool $jenPritomen): bool {
+    private function maCasovouKolizi(array $aktivity, DateTimeInterface $od, DateTimeInterface $do, ?Aktivita $ignorovanaAktivita, bool $jenPritomen): bool
+    {
         $ignorovanaAktivitaId = $ignorovanaAktivita ? $ignorovanaAktivita->id() : 0;
         foreach ($aktivity as $aktivita) {
             if ($ignorovanaAktivitaId === $aktivita->id()) {
@@ -761,7 +869,8 @@ SQL,
      * Uzivatel::maPravo(), skutečně výhradně k správě židlí jako takových.
      * @todo při načítání práv udělat pole místo načítání z DB
      */
-    public function maRoli($role): bool {
+    public function maRoli($role): bool
+    {
         $idRole = (int)$role;
         if (!$idRole) {
             return false;
@@ -769,14 +878,16 @@ SQL,
         return in_array($idRole, $this->dejIdsRoli(), true);
     }
 
-    public function maRoliClenRady(): bool {
+    public function maRoliClenRady(): bool
+    {
         return $this->maRoli(Role::CLEN_RADY);
     }
 
     /**
      * @return int[]
      */
-    public function dejIdsRoli(): array {
+    public function dejIdsRoli(): array
+    {
         if (!isset($this->idsRoli)) {
             $role          = dbOneArray('SELECT id_role FROM platne_role_uzivatelu WHERE id_uzivatele = ' . $this->id());
             $this->idsRoli = array_map('intval', $role);
@@ -784,7 +895,8 @@ SQL,
         return $this->idsRoli;
     }
 
-    protected function medailonek() {
+    protected function medailonek()
+    {
         if (!isset($this->medailonek)) {
             $this->medailonek[] = Medailonek::zId($this->id()); // pole kvůli korektní detekci null
         }
@@ -796,7 +908,8 @@ SQL,
      * @todo pokud bude výkonově ok, možno zrefaktorovat na třídu mail která bude
      * mít tento atribut
      */
-    public function mrtvyMail() {
+    public function mrtvyMail()
+    {
         return $this->r['mrtvy_mail'];
     }
 
@@ -804,7 +917,8 @@ SQL,
      * Ručně načte práva - neoptimalizovaná varianta, přijatelné pouze pro prasečí
      * řešení, kde si to můžeme dovolit (=reporty)
      */
-    public function nactiPrava() {
+    public function nactiPrava()
+    {
         if (!isset($this->r['prava'])) {
             //načtení uživatelských práv
             $p     = dbQuery(<<<SQL
@@ -813,7 +927,7 @@ SQL,
                 LEFT JOIN prava_role USING(id_role)
                 WHERE platne_role_uzivatelu.id_uzivatele=$0
                 SQL,
-                [0 => $this->id()]
+                [0 => $this->id()],
             );
             $prava = []; //inicializace nutná, aby nepadala výjimka pro uživatele bez práv
             while ($r = mysqli_fetch_assoc($p)) {
@@ -823,7 +937,8 @@ SQL,
         }
     }
 
-    public function prava(): array {
+    public function prava(): array
+    {
         if (!isset($this->r['prava'])) {
             $this->nactiPrava();
         } else if (is_string($this->r['prava'])) {
@@ -832,7 +947,8 @@ SQL,
         return $this->r['prava'];
     }
 
-    public function potvrzeniZakonnehoZastupceOd(): ?DateTimeImmutable {
+    public function potvrzeniZakonnehoZastupceOd(): ?DateTimeImmutable
+    {
         $potvrzeniOdString = $this->r['potvrzeni_zakonneho_zastupce'];
 
         return $potvrzeniOdString
@@ -841,27 +957,32 @@ SQL,
     }
 
     /** Vrátí přezdívku (nickname) uživatele */
-    public function login(): string {
+    public function login(): string
+    {
         return $this->r['login_uzivatele'];
     }
 
     /** Odhlásí aktuálně přihlášeného uživatele, pokud není přihlášen, nic
-     * @param bool $back rovnou otočit na referrer?
+     * @param bool $naUvodniStranku
      */
-    public function odhlas($back = false) {
+    public function odhlas($naUvodniStranku = true)
+    {
+        $a = $this->koncovkaDlePohlavi();
         $this->odhlasProTed();
         if (isset($_COOKIE['gcTrvalePrihlaseni'])) {
             setcookie('gcTrvalePrihlaseni', '', 0, '/');
         }
-        if ($back) {
-            back();
+        oznameni("Byl$a jsi odhlášen$a");
+        if ($naUvodniStranku) {
+            back(URL_WEBU);
         }
     }
 
     /**
      * Odhlásí aktuálně přihlášeného uživatele
      */
-    private function odhlasProTed() {
+    private function odhlasProTed()
+    {
         if (!session_id()) {
             session_start();
         }
@@ -869,7 +990,8 @@ SQL,
     }
 
     /** Odpojí od session uživatele na indexu $klic */
-    public static function odhlasKlic($klic) {
+    public static function odhlasKlic($klic)
+    {
         if (!session_id()) {
             session_start();
         }
@@ -879,7 +1001,8 @@ SQL,
     /**
      * Odebere uživatele z příjemců pravidelných mail(er)ů
      */
-    public function odhlasZMaileru() {
+    public function odhlasZMaileru()
+    {
         $id = $this->id();
         dbQueryS('UPDATE uzivatele_hodnoty SET nechce_maily = NOW() WHERE id_uzivatele = $1', [$id]);
     }
@@ -887,7 +1010,8 @@ SQL,
     /**
      * @return bool Jestli uživatel organizuje danou aktivitu nebo ne.
      */
-    public function organizuje(Aktivita $a) {
+    public function organizuje(Aktivita $a)
+    {
         if (!isset($this->organizovaneAktivityIds)) {
             $this->organizovaneAktivityIds = dbOneIndex(<<<SQL
                 SELECT akce_seznam.id_akce
@@ -895,21 +1019,23 @@ SQL,
                 JOIN akce_seznam
                     ON akce_seznam.id_akce = akce_organizatori.id_akce AND akce_seznam.rok = {$this->systemoveNastaveni->rocnik()}
                 WHERE akce_organizatori.id_uzivatele = {$this->id()}
-                SQL
+                SQL,
             );
         }
         return isset($this->organizovaneAktivityIds[$a->id()]);
     }
 
     /** Vrátí medailonek vypravěče */
-    public function oSobe() {
+    public function oSobe()
+    {
         return $this->medailonek() ? $this->medailonek()->oSobe() : null;
     }
 
     /**
      * Otočí (znovunačte, přihlásí a odhlásí, ...) uživatele
      */
-    public function otoc() {
+    public function otoc()
+    {
         if (PHP_SAPI === 'cli') {
             $this->r = self::zId($this->id())->r;
             return;
@@ -937,19 +1063,21 @@ SQL,
     /**
      * Vrátí timestamp začátku posledního bloku kdy uživatel má aktivitu
      */
-    public function posledniBlok(): ?string {
+    public function posledniBlok(): ?string
+    {
         $cas = dbOneCol(<<<SQL
             SELECT MAX(a.zacatek)
             FROM akce_seznam a
             JOIN akce_prihlaseni p USING(id_akce)
             WHERE p.id_uzivatele = {$this->id()} AND a.rok = {$this->systemoveNastaveni->rocnik()}
-            SQL
+            SQL,
         );
         return $cas;
     }
 
     /** Vrátí / nastaví poznámku uživatele */
-    public function poznamka($poznamka = null) {
+    public function poznamka($poznamka = null)
+    {
         if (isset($poznamka)) {
             dbQueryS('UPDATE uzivatele_hodnoty SET poznamka = $1 WHERE id_uzivatele = $2', [$poznamka, $this->id()]);
             $this->otoc();
@@ -958,7 +1086,8 @@ SQL,
         return $this->r['poznamka'];
     }
 
-    public function balicekHtml() {
+    public function balicekHtml()
+    {
         if (!$this->gcPrihlasen()) {
             return '';
         }
@@ -966,7 +1095,7 @@ SQL,
         $objednalNejakeJidlo = $shop->objednalNejakeJidlo();
         if (!$shop->koupilNejakouVec()) {
             return $objednalNejakeJidlo
-                ? "<span class=\"hinted\">jen stravenky<span class=\"hint\">{$shop->objednneJidloPrehledHtml()}</span></span>"
+                ? "<span class=\"hinted\">jen stravenky<span class=\"hint\">{$shop->objednaneJidloPrehledHtml()}</span></span>"
                 : '';
         }
         $velikostBalicku = $this->r['infopult_poznamka'] === 'velký balíček ' . $this->systemoveNastaveni->rocnik()
@@ -975,7 +1104,7 @@ SQL,
         $nakupy          = [];
         $nakupy[]        = $shop->koupeneVeciPrehledHtml();
         if ($objednalNejakeJidlo) {
-            $nakupy[] = $shop->objednneJidloPrehledHtml();
+            $nakupy[] = $shop->objednaneJidloPrehledHtml();
         }
         $nakupyHtml = implode('<hr>', $nakupy);
         return '<span class="hinted">' . htmlentities($velikostBalicku) . ' ' . $this->id() . '<span class="hint">' . $nakupyHtml . '</span></span>';
@@ -988,7 +1117,8 @@ SQL,
      * @param string $heslo heslo uživatele
      * @return mixed objekt s uživatelem nebo null
      */
-    public static function prihlas($login, $heslo, $klic = self::UZIVATEL) {
+    public static function prihlas($login, $heslo, $klic = self::UZIVATEL)
+    {
         if (!$login || !$heslo) {
             return null;
         }
@@ -998,7 +1128,7 @@ SQL,
             WHERE login_uzivatele = $0 OR email1_uzivatele = $0
             ORDER BY email1_uzivatele = $0 DESC -- e-mail má prioritu
             LIMIT 1',
-            [$login]
+            [$login],
         );
         if (!$uzivatelData) {
             return null;
@@ -1030,7 +1160,7 @@ SELECT id_prava
 FROM platne_role_uzivatelu
     LEFT JOIN prava_role ON platne_role_uzivatelu.id_role = prava_role.id_role
 WHERE platne_role_uzivatelu.id_uzivatele={$idUzivatele}
-SQL
+SQL,
         );
         $prava = []; // inicializace nutná, aby nepadala výjimka pro uživatele bez práv
         while ($r = mysqli_fetch_assoc($p)) {
@@ -1045,7 +1175,8 @@ SQL
      * Vytvoří v session na indexu $klic dalšího uživatele pro práci
      * @return null|Uzivatel nebo null
      */
-    public static function prihlasId($idUzivatele, $klic = self::UZIVATEL): ?Uzivatel {
+    public static function prihlasId($idUzivatele, $klic = self::UZIVATEL): ?Uzivatel
+    {
         $idUzivatele  = (int)$idUzivatele;
         $uzivatelData = dbOneLine('SELECT * FROM uzivatele_hodnoty WHERE id_uzivatele=$0', [$idUzivatele]);
         if (!$uzivatelData) {
@@ -1057,7 +1188,7 @@ SQL
         $_SESSION[$klic]['id_uzivatele'] = $idUzivatele;
         //načtení uživatelských práv
         $p     = dbQuery(
-            'SELECT id_prava FROM platne_role_uzivatelu uz LEFT JOIN prava_role pz USING(id_role) WHERE uz.id_uzivatele=' . $idUzivatele
+            'SELECT id_prava FROM platne_role_uzivatelu uz LEFT JOIN prava_role pz USING(id_role) WHERE uz.id_uzivatele=' . $idUzivatele,
         );
         $prava = []; //inicializace nutná, aby nepadala výjimka pro uživatele bez práv
         while ($r = mysqli_fetch_assoc($p)) {
@@ -1071,7 +1202,8 @@ SQL
     }
 
     /** Alias prihlas() pro trvalé přihlášení */
-    public static function prihlasTrvale($login, $heslo, $klic = self::UZIVATEL) {
+    public static function prihlasTrvale($login, $heslo, $klic = self::UZIVATEL)
+    {
         $u    = Uzivatel::prihlas($login, $heslo, $klic);
         $rand = randHex(20);
         if ($u) {
@@ -1079,7 +1211,7 @@ SQL
                 'UPDATE uzivatele_hodnoty
                 SET random=$0
                 WHERE id_uzivatele=' . $u->id(),
-                [$rand]
+                [$rand],
             );
             setcookie('gcTrvalePrihlaseni', $rand, time() + 3600 * 24 * 365, '/');
         }
@@ -1089,7 +1221,8 @@ SQL
     /**
      * @return bool true, pokud je uživatel přihlášen jako sledující aktivity (ve watchlistu).
      */
-    public function prihlasenJakoSledujici(Aktivita $a) {
+    public function prihlasenJakoSledujici(Aktivita $a)
+    {
         if (!isset($this->aktivityJakoSledujici)) {
             $this->aktivityJakoSledujici = dbOneIndex("
         SELECT id_akce
@@ -1100,20 +1233,22 @@ SQL
         return isset($this->aktivityJakoSledujici[$a->id()]);
     }
 
-    public function dorazilJakoNahradnik(Aktivita $aktivita) {
+    public function dorazilJakoNahradnik(Aktivita $aktivita)
+    {
         return $aktivita->dorazilJakoNahradnik($this);
     }
 
     /**
      * Vrátí timestamp prvního bloku kdy uživatel má aktivitu
      */
-    public function prvniBlok(): ?string {
+    public function prvniBlok(): ?string
+    {
         $prvniBlok = dbOneCol(<<<SQL
             SELECT MIN(a.zacatek)
                 FROM akce_seznam a
                     JOIN akce_prihlaseni p USING(id_akce)
                 WHERE p.id_uzivatele = {$this->id()} AND a.rok = {$this->systemoveNastaveni->rocnik()}
-            SQL
+            SQL,
         );
         return $prvniBlok
             ? (string)$prvniBlok
@@ -1128,25 +1263,27 @@ SQL
      *
      * @return int id nově vytvořeného uživatele
      */
-    public static function registruj($tab) {
-        return self::registrujUprav($tab);
+    public static function registruj(array $tab)
+    {
+        return self::registrujUprav($tab, null);
     }
 
     /**
      * Zregistruje nového uživatele nebo upraví stávajícího $u, pokud je zadán.
      */
-    private static function registrujUprav($tab, Uzivatel $u = null) {
+    private static function registrujUprav(array $tab, ?Uzivatel $u): string
+    {
         $dbTab                  = $tab;
         $chyby                  = [];
         $preskocitChybejiciPole = (bool)$u;
 
         // opravy
-        $dbTab = array_map(function ($e) {
-            return preg_replace('/\s+/', ' ', trim($e));
+        $dbTab = array_map(static function ($hodnota) {
+            return preg_replace('/\s+/', ' ', trim((string)$hodnota));
         }, $dbTab);
 
-        if (isset($dbTab['email1_uzivatele'])) {
-            $dbTab['email1_uzivatele'] = mb_strtolower($dbTab['email1_uzivatele']);
+        if (isset($dbTab[Sql::EMAIL1_UZIVATELE])) {
+            $dbTab[Sql::EMAIL1_UZIVATELE] = mb_strtolower($dbTab[Sql::EMAIL1_UZIVATELE]);
         }
 
         // TODO fallback prázdná přezdívka -> mail?
@@ -1159,10 +1296,10 @@ SQL
 
             $u2 = Uzivatel::zNicku($login) ?? Uzivatel::zMailu($login);
             if ($u2 && !$u) {
-                return 'přezdívka už je zabraná. Pokud je tvoje, přihlaš se nebo si resetuj heslo';
+                return 'přezdívka už je zabraná; pokud je tvoje, přihlaš se nebo si resetuj heslo';
             }
             if ($u2 && $u && $u2->id() != $u->id()) {
-                return 'přezdívka už je zabraná. Vyber si prosím jinou';
+                return 'přezdívka už je zabraná, vyber si prosím jinou';
             }
             return '';
         };
@@ -1191,7 +1328,9 @@ SQL
         };
 
         $validaceHesla = function ($heslo) use ($dbTab) {
-            if (empty($heslo)) return 'vyplň prosím heslo';
+            if (empty($heslo)) {
+                return 'vyplň prosím heslo';
+            }
 
             if (
                 $heslo != ($dbTab['heslo'] ?? null) ||
@@ -1202,26 +1341,35 @@ SQL
             return '';
         };
 
+        $dbTab = self::spojPredvolbuSTelefonem($dbTab);
+
         $validace = [
-            'jmeno_uzivatele'      => ['.+', 'jméno nesmí být prázdné'],
-            'prijmeni_uzivatele'   => ['.+', 'příjmení nesmí být prázdné'],
-            'login_uzivatele'      => $validaceLoginu,
-            'email1_uzivatele'     => $validaceMailu,
-            'pohlavi'              => ['^(m|f)$', 'vyber prosím pohlaví'],
-            'ulice_a_cp_uzivatele' => ['.+ [\d\/a-z]+$', 'vyplň prosím ulici, např. Česká 27'],
-            'mesto_uzivatele'      => ['.+', 'vyplň prosím město'],
-            'psc_uzivatele'        => ['^[\d ]+$', 'vyplň prosím PSČ, např. 602 00'],
-            'stat_uzivatele'       => ['^(1|2|-1)$', 'vyber prosím stát'],
-            'telefon_uzivatele'    => ['^[\d \+]+$', 'vyplň prosím telefon, např. +420 789 123 456'],
-            'datum_narozeni'       => $validaceDataNarozeni,
-            'heslo'                => $validaceHesla,
-            'heslo_kontrola'       => $validaceHesla,
+            // Osobní
+            Sql::EMAIL1_UZIVATELE       => $validaceMailu,
+            Sql::TELEFON_UZIVATELE      => ['^[\d \+]+$', 'vyplň prosím telefon, např. +420 789 123 456'],
+            Sql::JMENO_UZIVATELE        => ['.+', 'jméno nesmí být prázdné'],
+            Sql::PRIJMENI_UZIVATELE     => ['.+', 'příjmení nesmí být prázdné'],
+            Sql::DATUM_NAROZENI         => $validaceDataNarozeni,
+            Sql::STATNI_OBCANSTVI       => ['[[:alpha:]]{2,}', 'vyplň prosím státní občanství'],
+            // Adresa trvalého pobytu
+            Sql::ULICE_A_CP_UZIVATELE   => ['.+ [\d\/a-z]+$', 'vyplň prosím ulici, např. Česká 27'],
+            Sql::MESTO_UZIVATELE        => ['.+', 'vyplň prosím město'],
+            Sql::PSC_UZIVATELE          => ['^[\d ]+$', 'vyplň prosím PSČ, např. 602 00'],
+            Sql::STAT_UZIVATELE         => ['^(1|2|-1)$', 'vyber prosím stát'],
+            // Platný doklad totožnosti
+            Sql::TYP_DOKLADU_TOTOZNOSTI => [implode('|', self::TYPY_DOKLADU), 'vyber prosím typ dokladu totožnosti'],
+            Sql::OP                     => ['[a-zA-Z0-9]{5,}', 'vyplň prosím celé číslo dokladu'],
+            // Ostatní
+            Sql::LOGIN_UZIVATELE        => $validaceLoginu,
+            Sql::POHLAVI                => ['^(m|f)$', 'vyber prosím pohlaví'],
+            'heslo'                     => $validaceHesla,
+            'heslo_kontrola'            => $validaceHesla,
         ];
 
         // provedení validací
         $navic = array_diff(array_keys($dbTab), array_keys($validace));
         if ($navic) {
-            throw new Exception('Data obsahují nepovolené hodnoty');
+            throw new Exception('Data obsahují nepovolené hodnoty: ' . implode(',', $navic));
         }
 
         foreach ($validace as $klic => $validator) {
@@ -1230,11 +1378,19 @@ SQL
             if ($hodnota === null && $preskocitChybejiciPole) {
                 continue;
             }
+            $hodnota = trim((string)$hodnota);
+            if ($hodnota === '') {
+                $povinne = in_array($klic, ['heslo', 'heslo_kontrola'])
+                    || array_key_exists($klic, self::povinneUdajeProRegistraci());
+                if (!$povinne) {
+                    continue;
+                }
+            }
 
             if (is_array($validator)) {
                 $regex      = $validator[0];
                 $popisChyby = $validator[1];
-                if (!preg_match("/$regex/", $hodnota)) {
+                if (!preg_match("/$regex/u", $hodnota)) {
                     $chyby[$klic] = $popisChyby;
                 }
             } else {
@@ -1247,11 +1403,10 @@ SQL
 
         if ($chyby) {
             $ch = Chyby::zPole($chyby);
-            $ch->globalniChyba($u
-                ?
-                'Úprava se nepodařila, oprav prosím zvýrazněné položky.'
-                :
-                'Registrace se nepodařila. Oprav prosím zvýrazněné položky.'
+            $ch->globalniChyba(
+                $u
+                    ? 'Úprava se nepodařila, oprav prosím zvýrazněné položky.'
+                    : 'Registrace se nepodařila. Oprav prosím zvýrazněné položky.',
             );
             throw $ch;
         }
@@ -1269,6 +1424,10 @@ SQL
         // odstranění polí, co nebudou v DB
         unset($dbTab['heslo']);
         unset($dbTab['heslo_kontrola']);
+
+        if (isset($dbTab[Sql::OP])) {
+            $dbTab[Sql::OP] = Sifrovatko::zasifruj($dbTab[Sql::OP]);
+        }
 
         // uložení
         if ($u) {
@@ -1289,6 +1448,21 @@ SQL
         return $idUzivatele;
     }
 
+    protected static function spojPredvolbuSTelefonem(array $data): array
+    {
+        $telefon   = $data[Sql::TELEFON_UZIVATELE] ?? null;
+        $predvolba = $data['predvolba'] ?? null;
+        unset($data['predvolba']); // v dalším zpracování dat by předvolba byla považována za neznámý klíč a chybu
+
+        if (empty($telefon) || empty($predvolba)) {
+            return $data;
+        }
+
+        $data[Sql::TELEFON_UZIVATELE] = $predvolba . ' ' . $telefon;
+
+        return $data;
+    }
+
     /**
      * Rychloregistruje uživatele s omezeným počtem údajů při registraci na místě.
      * @return int id nově vytvořeného uživatele (možno vytvořit objekt uživatele
@@ -1296,7 +1470,8 @@ SQL
      * @todo možno evidovat, že uživatel byl regnut na místě
      * @todo poslat mail s něčím jiným jak std hláškou
      */
-    public static function rychloreg($tab, $opt = []) {
+    public static function rychloreg($tab, $opt = [])
+    {
         if (!isset($tab['login_uzivatele']) || !isset($tab['email1_uzivatele'])) {
             throw new Exception('špatný formát $tab (je to pole?)');
         }
@@ -1336,7 +1511,8 @@ SQL
      * Smaže uživatele $u a jeho historii připojí k tomuto uživateli. Sloupečky
      * v poli $zmeny případně aktualizuje podle hodnot smazaného uživatele.
      */
-    public function sluc(Uzivatel $u, $zmeny = []) {
+    public function sluc(Uzivatel $u, $zmeny = [])
+    {
         $zmeny             = array_intersect_key($u->r, array_flip($zmeny));
         $zmeny['zustatek'] = $this->r['zustatek'] + $u->r['zustatek'];
 
@@ -1346,12 +1522,14 @@ SQL
         // TODO přenačíst aktuálního uživatele
     }
 
-    public function status() {
+    public function status()
+    {
         return trim(strip_tags($this->statusHtml()));
     }
 
     /** Vrátí html formátovaný „status“ uživatele (pro interní informaci) */
-    public function statusHtml() {
+    public function statusHtml()
+    {
         $ka     = $this->koncovkaDlePohlavi('ka');
         $status = [];
         if ($this->maPravo(Pravo::TITUL_ORGANIZATOR)) {
@@ -1384,7 +1562,8 @@ SQL
         return 'Účastník';
     }
 
-    public function telefon(bool $html = false): string {
+    public function telefon(bool $html = false): string
+    {
         $telefon = trim((string)$this->r['telefon_uzivatele']);
         if ($telefon === '') {
             return '';
@@ -1425,7 +1604,8 @@ SQL
      *
      * Extra položky: heslo a heslo_kontrola (metoda si je sama převede na hash).
      */
-    public function uprav($tab) {
+    public function uprav(array $tab)
+    {
         $tab = array_filter($tab);
         return self::registrujUprav($tab, $this);
     }
@@ -1433,7 +1613,8 @@ SQL
     /**
      * Vrátí url cestu k stránce uživatele (bez domény).
      */
-    public function url(bool $vcetneId = false): ?string {
+    public function url(bool $vcetneId = false): ?string
+    {
         if (!$this->r['jmeno_uzivatele']) {
             return null; // nevracet url, asi vypravěčská skupina nebo podobně
         }
@@ -1445,7 +1626,8 @@ SQL
         return self::vytvorUrl($this->r);
     }
 
-    private static function vytvorUrl(array $uzivatelData): ?string {
+    private static function vytvorUrl(array $uzivatelData): ?string
+    {
         $jmenoNick = self::jmenoNickZjisti($uzivatelData);
         $url       = slugify($jmenoNick);
 
@@ -1454,7 +1636,8 @@ SQL
             : null;
     }
 
-    public function vek(): ?int {
+    public function vek(): ?int
+    {
         if ($this->r['datum_narozeni'] == '0000-00-00' || $this->r['datum_narozeni'] == '1970-01-01') {
             return null;
         }
@@ -1468,7 +1651,8 @@ SQL
      * @param DateTimeCz $datum
      * @return ?int
      */
-    public function vekKDatu(DateTimeCz $datum): ?int {
+    public function vekKDatu(DateTimeInterface $datum): ?int
+    {
         if ($this->r['datum_narozeni'] == '0000-00-00') {
             return null;
         }
@@ -1478,7 +1662,8 @@ SQL
     /**
      * Odstraní uživatele z role a aktualizuje jeho práva.
      */
-    public function odeberRoli(int $idRole, Uzivatel $editor) {
+    public function odeberRoli(int $idRole, Uzivatel $editor)
+    {
         $result = dbQuery('DELETE FROM uzivatele_role WHERE id_uzivatele=' . $this->id() . ' AND id_role=' . $idRole);
         if (dbAffectedOrNumRows($result) > 0) {
             $this->zalogujZmenuRole($idRole, $editor->id(), self::SESAZEN);
@@ -1486,18 +1671,20 @@ SQL
         $this->aktualizujPrava();
     }
 
-    private function zalogujZmenuRole(int $idRole, int $idEditora, string $zmena) {
+    private function zalogujZmenuRole(int $idRole, int $idEditora, string $zmena)
+    {
         dbQuery(<<<SQL
 INSERT INTO uzivatele_role_log(id_uzivatele, id_role, id_zmenil, zmena, kdy)
 VALUES ($0, $1, $2, $3, NOW())
 SQL,
-            [$this->id(), $idRole, $idEditora, $zmena]
+            [$this->id(), $idRole, $idEditora, $zmena],
         );
     }
 
     //getters, setters
 
-    public function id(): ?int {
+    public function id(): ?int
+    {
         return isset($this->r['id_uzivatele'])
             ? (int)$this->r['id_uzivatele']
             : null;
@@ -1506,23 +1693,27 @@ SQL,
     /**
      * Vrátí pohlaví ve tvaru 'm' nebo 'f'
      */
-    public function pohlavi() {
+    public function pohlavi()
+    {
         return $this->r['pohlavi'];
     }
 
-    public function prezdivka() {
+    public function prezdivka()
+    {
         return $this->r['login_uzivatele'];
     }
 
     /** Vrátí kód státu ve formátu ISO 3166-1 alpha-2 https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2 */
-    public function stat(): ?string {
+    public function stat(): ?string
+    {
         return \Gamecon\Stat::dejKodStatuPodleId($this->r['stat_uzivatele'] ? (int)$this->r['stat_uzivatele'] : null);
     }
 
     /**
      * surová data z DB
      */
-    public function rawDb() {
+    public function rawDb()
+    {
         return $this->r;
     }
 
@@ -1530,7 +1721,8 @@ SQL,
      * Na základě řetězce $dotaz zkusí najít všechny uživatele, kteří odpovídají
      * jménem, nickem, apod.
      */
-    public static function zHledani(string $dotaz, $opt = [], int $limit = 20, int $minimumZnaku = 3) {
+    public static function zHledani(string $dotaz, $opt = [], int $limit = 20, int $minimumZnaku = 3)
+    {
         $opt = opt(
             $opt,
             [
@@ -1539,7 +1731,7 @@ SQL,
                 'kromeIdUzivatelu'           => [],
                 'jenSRolemi'                 => null,
                 'min'                        => $minimumZnaku,
-            ]
+            ],
         );
         if (!is_numeric($dotaz) && mb_strlen($dotaz) < $opt['min']) {
             return [];
@@ -1577,7 +1769,8 @@ SQL,
     ", null, 'LIMIT ' . $limit);
     }
 
-    public static function zId($id, bool $zCache = false): ?Uzivatel {
+    public static function zId($id, bool $zCache = false): ?Uzivatel
+    {
         $id = (int)$id;
 
         if ($zCache) {
@@ -1596,7 +1789,8 @@ SQL,
         return $uzivatel;
     }
 
-    public static function zIdUrcite($id, bool $zCache = false): self {
+    public static function zIdUrcite($id, bool $zCache = false): self
+    {
         $uzivatel = static::zId($id, $zCache);
         if ($uzivatel !== null) {
             return $uzivatel;
@@ -1610,7 +1804,8 @@ SQL,
      * @param string|int[] $ids
      * @return Uzivatel[]
      */
-    public static function zIds($ids): array {
+    public static function zIds($ids): array
+    {
         if (empty($ids)) {
             return [];
         }
@@ -1627,18 +1822,20 @@ SQL,
     /**
      * Vrátí uživatele dle zadaného mailu.
      */
-    public static function zMailu(?string $mail): ?Uzivatel {
+    public static function zMailu(?string $mail): ?Uzivatel
+    {
         if (!$mail) {
             return null;
         }
         $uzivatele = Uzivatel::zWhere(
             'WHERE email1_uzivatele = $0',
-            [0 => filter_var($mail, FILTER_SANITIZE_EMAIL)]
+            [0 => filter_var($mail, FILTER_SANITIZE_EMAIL)],
         );
         return $uzivatele[0] ?? null;
     }
 
-    public static function zNicku(string $nick): ?Uzivatel {
+    public static function zNicku(string $nick): ?Uzivatel
+    {
         if (!$nick) {
             return null;
         }
@@ -1649,7 +1846,8 @@ SQL,
     /**
      * Vytvoří a vrátí nového uživatele z zadaného pole odpovídajícího db struktuře
      */
-    public static function zPole($pole, $mod = 0) {
+    public static function zPole($pole, $mod = 0)
+    {
         if ($mod & self::FAKE) {
             $pole['email1_uzivatele'] = $pole['login_uzivatele'] . '@FAKE';
             $pole['nechce_maily']     = null;
@@ -1664,7 +1862,8 @@ SQL,
      * Vrátí pole uživatelů přihlášených na letošní GC
      * @return Uzivatel[]
      */
-    public static function zPrihlasenych() {
+    public static function zPrihlasenych()
+    {
         return self::zWhere('
       WHERE u.id_uzivatele IN(
         SELECT id_uzivatele
@@ -1681,7 +1880,8 @@ SQL,
      * @return Uzivatel|null objekt uživatele nebo null
      * @todo nenačítat znovu jednou načteného, cacheovat
      */
-    public static function zSession($klic = self::UZIVATEL) {
+    public static function zSession($klic = self::UZIVATEL)
+    {
         if (!session_id()) {
             if (headers_sent($file, $line)) {
                 throw new \RuntimeException("Headers have been already sent in file '$file' on line $line, can not start session");
@@ -1701,7 +1901,7 @@ SQL,
         if (isset($_COOKIE['gcTrvalePrihlaseni']) && $klic === self::UZIVATEL) {
             $id = dbOneCol(
                 "SELECT id_uzivatele FROM uzivatele_hodnoty WHERE random!='' AND random=$0",
-                [$_COOKIE['gcTrvalePrihlaseni']]
+                [$_COOKIE['gcTrvalePrihlaseni']],
             );
             if (!$id) {
                 return null;
@@ -1712,7 +1912,7 @@ SQL,
                 "UPDATE uzivatele_hodnoty
                 SET random=$0
                 WHERE id_uzivatele=$id",
-                [$rand]
+                [$rand],
             );
             setcookie('gcTrvalePrihlaseni', $rand, time() + 3600 * 24 * 365, '/');
             return Uzivatel::prihlasId($id, $klic);
@@ -1723,7 +1923,8 @@ SQL,
     /**
      * Vrátí uživatele s loginem odpovídajícím dané url
      */
-    public static function zUrl(): ?Uzivatel {
+    public static function zUrl(): ?Uzivatel
+    {
         $aktualniUrl = Url::zAktualni()->cela();
         $idUzivatele = (int)$aktualniUrl;
         if ($idUzivatele) {
@@ -1739,12 +1940,13 @@ SQL,
     /**
      * @return string[]
      */
-    public static function cfosEmaily(): array {
+    public static function cfosEmaily(): array
+    {
         $cfos = Uzivatel::zRole(Role::CFO);
 
         return array_filter(
             array_map(static fn(Uzivatel $cfo) => $cfo->mail(), $cfos),
-            static fn($mail) => is_string($mail) && filter_var($mail, FILTER_VALIDATE_EMAIL) !== false
+            static fn($mail) => is_string($mail) && filter_var($mail, FILTER_VALIDATE_EMAIL) !== false,
         );
     }
 
@@ -1753,11 +1955,13 @@ SQL,
      * @todo asi lazy loading práv
      * @todo zrefaktorovat nactiUzivatele na toto
      */
-    protected static function zWhere($where, $param = null, $extra = ''): array {
-        return parent::zWhere($where, $param, $extra);
+    protected static function zWhere($where, $params = null, $extra = ''): array
+    {
+        return parent::zWhere($where, $params, $extra);
     }
 
-    protected static function dotaz($where): string {
+    protected static function dotaz($where): string
+    {
         return <<<SQL
 SELECT
     u.*,
@@ -1773,9 +1977,10 @@ SQL;
     }
 
     /** Vrátí pole uživatelů sedících na roli s daným ID */
-    public static function zRole($id) {
+    public static function zRole($id)
+    {
         return self::nactiUzivatele( // WHERE nelze, protože by se omezily načítané práva uživatele
-            'JOIN uzivatele_role z2 ON (z2.id_role = ' . dbQv($id) . ' AND z2.id_uzivatele = u.id_uzivatele)'
+            'JOIN uzivatele_role z2 ON (z2.id_role = ' . dbQv($id) . ' AND z2.id_uzivatele = u.id_uzivatele)',
         );
     }
 
@@ -1784,7 +1989,8 @@ SQL;
     /**
      * Aktualizuje práva uživatele z databáze (protože se provedla nějaká změna)
      */
-    protected function aktualizujPrava() {
+    protected function aktualizujPrava()
+    {
         $this->r['prava'] = null;
         $this->nactiPrava();
     }
@@ -1795,7 +2001,8 @@ SQL;
      * @param string $where
      * @return Uzivatel[]
      */
-    protected static function nactiUzivatele(string $where): array {
+    protected static function nactiUzivatele(string $where): array
+    {
         $query     = self::dotaz($where);
         $o         = dbQuery($query);
         $uzivatele = [];
@@ -1807,9 +2014,11 @@ SQL;
         return $uzivatele;
     }
 
-    public function shop(SystemoveNastaveni $systemoveNastaveni = null): Shop {
+    public function shop(SystemoveNastaveni $systemoveNastaveni = null): Shop
+    {
         if ($this->shop === null) {
             $this->shop = new Shop(
+                $this,
                 $this,
                 null,
                 $systemoveNastaveni ?? SystemoveNastaveni::vytvorZGlobals()
@@ -1818,13 +2027,15 @@ SQL;
         return $this->shop;
     }
 
-    public function maNahranyDokladProtiCoviduProRok(int $rok): bool {
+    public function maNahranyDokladProtiCoviduProRok(int $rok): bool
+    {
         $potvrzeniProtiCovid19PridanoKdy = $this->potvrzeniProtiCoviduPridanoKdy();
         return $potvrzeniProtiCovid19PridanoKdy
             && $potvrzeniProtiCovid19PridanoKdy->format('Y') === (string)$rok;
     }
 
-    public function maOverenePotvrzeniProtiCoviduProRok(int $rok, bool $musiMitNahranyDokument = false): bool {
+    public function maOverenePotvrzeniProtiCoviduProRok(int $rok, bool $musiMitNahranyDokument = false): bool
+    {
         if ($musiMitNahranyDokument && !$this->maNahranyDokladProtiCoviduProRok($rok)) {
             return false;
         }
@@ -1833,14 +2044,15 @@ SQL;
             && $potvrzeniProtiCovid19OverenoKdy->format('Y') === (string)$rok;
     }
 
-    public function covidFreePotvrzeniHtml(int $rok): string {
+    public function covidFreePotvrzeniHtml(int $rok): string
+    {
         $x = new XTemplate(__DIR__ . '/uzivatel-covid-potvrzeni.xtpl');
         $x->assign('a', $this->koncovkaDlePohlavi());
         if ($this->maNahranyDokladProtiCoviduProRok($rok)) {
             if ($this->maOverenePotvrzeniProtiCoviduProRok($rok, true)) {
                 $x->assign(
                     'datumOvereniPotvrzeniProtiCovid',
-                    (new DateTimeCz($this->potvrzeniProtiCoviduOverenoKdy()->format(DATE_ATOM)))->rozdilDne(new DateTimeImmutable())
+                    (new DateTimeCz($this->potvrzeniProtiCoviduOverenoKdy()->format(DATE_ATOM)))->rozdilDne(new DateTimeImmutable()),
                 );
                 $x->parse('covid.nahrano.overeno');
             } else {
@@ -1850,14 +2062,14 @@ SQL;
             $x->assign('urlNaPotvrzeniProtiCoviduProVlastnika', $this->urlNaPotvrzeniProtiCoviduProVlastnika());
             $x->assign(
                 'datumNahraniPotvrzeniProtiCovid',
-                (new DateTimeCz($this->potvrzeniProtiCoviduPridanoKdy()->format(DATE_ATOM)))->relativni()
+                (new DateTimeCz($this->potvrzeniProtiCoviduPridanoKdy()->format(DATE_ATOM)))->relativni(),
             );
             $x->parse('covid.nahrano');
         } else {
             if ($this->maOverenePotvrzeniProtiCoviduProRok($rok, true)) {
                 $x->assign(
                     'datumOvereniPotvrzeniProtiCovid',
-                    (new DateTimeCz($this->potvrzeniProtiCoviduOverenoKdy()->format(DATE_ATOM)))->relativni()
+                    (new DateTimeCz($this->potvrzeniProtiCoviduOverenoKdy()->format(DATE_ATOM)))->relativni(),
                 );
                 $x->parse('covid.overenoBezDokladu');
             }
@@ -1867,7 +2079,8 @@ SQL;
         return $x->text('covid');
     }
 
-    public function zpracujPotvrzeniProtiCovidu(): bool {
+    public function zpracujPotvrzeniProtiCovidu(): bool
+    {
         if (!isset($_FILES['potvrzeniProtiCovidu']) || empty($_FILES['potvrzeniProtiCovidu']['tmp_name'])) {
             return false;
         }
@@ -1902,7 +2115,8 @@ SQL;
         return true;
     }
 
-    private function ulozPotvrzeniProtiCoviduPridanyKdy(?\DateTimeInterface $kdy) {
+    private function ulozPotvrzeniProtiCoviduPridanyKdy(?\DateTimeInterface $kdy)
+    {
         dbUpdate('uzivatele_hodnoty', [
             'potvrzeni_proti_covid19_pridano_kdy' => $kdy,
         ], [
@@ -1911,7 +2125,8 @@ SQL;
         $this->r['potvrzeni_proti_covid19_pridano_kdy'] = $kdy ? $kdy->format(DateTimeCz::FORMAT_DB) : null;
     }
 
-    private function ulozPotvrzeniProtiCoviduOverenoKdy(?\DateTimeInterface $kdy) {
+    private function ulozPotvrzeniProtiCoviduOverenoKdy(?\DateTimeInterface $kdy)
+    {
         dbUpdate('uzivatele_hodnoty', [
             'potvrzeni_proti_covid19_overeno_kdy' => $kdy,
         ], [
@@ -1920,26 +2135,31 @@ SQL;
         $this->r['potvrzeni_proti_covid19_overeno_kdy'] = $kdy ? $kdy->format(DateTimeCz::FORMAT_DB) : null;
     }
 
-    public function urlNaPotvrzeniProtiCoviduProAdmin(): string {
+    public function urlNaPotvrzeniProtiCoviduProAdmin(): string
+    {
         // admin/scripts/zvlastni/infopult/potvrzeni-proti-covidu.php
         return URL_ADMIN . '/infopult/potvrzeni-proti-covidu?id=' . $this->id();
     }
 
-    public function urlNaPotvrzeniProtiCoviduProVlastnika(): string {
+    public function urlNaPotvrzeniProtiCoviduProVlastnika(): string
+    {
         // admin/scripts/zvlastni/uvod/potvrzeni-proti-covidu.php
         return URL_WEBU . '/prihlaska/potvrzeni-proti-covidu?id=' . $this->id();
     }
 
-    public function urlNaSmazaniPotrvrzeniVlastnikem(): string {
+    public function urlNaSmazaniPotrvrzeniVlastnikem(): string
+    {
         // admin/scripts/zvlastni/uvod/potvrzeni-proti-covidu.php
         return URL_WEBU . '/prihlaska/potvrzeni-proti-covidu?id=' . $this->id() . '&smazat=1';
     }
 
-    public function cestaKSouboruSPotvrzenimProtiCovidu(): string {
+    public function cestaKSouboruSPotvrzenimProtiCovidu(): string
+    {
         return WWW . '/soubory/systemove/potvrzeni/covid-19-' . $this->id() . '.png';
     }
 
-    public function smazPotvrzeniProtiCovidu() {
+    public function smazPotvrzeniProtiCovidu()
+    {
         if (is_file($this->cestaKSouboruSPotvrzenimProtiCovidu())) {
             unlink($this->cestaKSouboruSPotvrzenimProtiCovidu());
         }
@@ -1947,21 +2167,24 @@ SQL;
         $this->ulozPotvrzeniProtiCoviduOverenoKdy(null);
     }
 
-    public function potvrzeniProtiCoviduPridanoKdy(): ?\DateTimeInterface {
+    public function potvrzeniProtiCoviduPridanoKdy(): ?\DateTimeInterface
+    {
         $potvrzeniProtiCovid19PridanoKdy = $this->r['potvrzeni_proti_covid19_pridano_kdy'] ?? null;
         return $potvrzeniProtiCovid19PridanoKdy
             ? new DateTimeImmutable($potvrzeniProtiCovid19PridanoKdy)
             : null;
     }
 
-    public function potvrzeniProtiCoviduOverenoKdy(): ?\DateTimeInterface {
+    public function potvrzeniProtiCoviduOverenoKdy(): ?\DateTimeInterface
+    {
         $potvrzeniProtiCovid19OverenoKdy = $this->r['potvrzeni_proti_covid19_overeno_kdy'] ?? null;
         return $potvrzeniProtiCovid19OverenoKdy
             ? new DateTimeImmutable($potvrzeniProtiCovid19OverenoKdy)
             : null;
     }
 
-    public function uvodniAdminUrl(string $zakladniAdminUrl = URL_ADMIN): string {
+    public function uvodniAdminUrl(string $zakladniAdminUrl = URL_ADMIN): string
+    {
         if ($this->maPravo(Pravo::ADMINISTRACE_INFOPULT)) {
             return $this->infopultAdminUrl($zakladniAdminUrl);
         }
@@ -1971,7 +2194,8 @@ SQL;
         return $zakladniAdminUrl;
     }
 
-    public function infopultAdminUrl(string $zakladniAdminUrl = URL_ADMIN): string {
+    public function infopultAdminUrl(string $zakladniAdminUrl = URL_ADMIN): string
+    {
         // vrátí "infopult" - máme to schválně přes cestu ke skriptu, protože jeho název udává výslednou URL a nechceme mít neplatnou URL, kdyby někdo ten skrip přejmenoval.
         return $zakladniAdminUrl . '/' . basename(__DIR__ . '/../admin/scripts/modules/infopult.php', '.php');
     }
@@ -1982,7 +2206,8 @@ SQL;
      * @param string $zakladniWebUrl
      * @return string[] nazev => název, url => URL
      */
-    public function mimoMojeAktivityUvodniAdminLink(string $zakladniAdminUrl = URL_ADMIN, string $zakladniWebUrl = URL_WEBU): array {
+    public function mimoMojeAktivityUvodniAdminLink(string $zakladniAdminUrl = URL_ADMIN, string $zakladniWebUrl = URL_WEBU): array
+    {
         // URL máme schválně přes cestu ke skriptu, protože jeho název udává výslednou URL a nechceme mít neplatnou URL, kdyby někdo ten skrip přejmenoval.
         if ($this->maPravo(Pravo::ADMINISTRACE_INFOPULT)) {
             /** 'uvod' viz například @link http://admin.beta.gamecon.cz/moje-aktivity/infopult */
@@ -1998,12 +2223,14 @@ SQL;
         return ['url' => $zakladniWebUrl . '/' . $webProgramUrl, 'nazev' => 'na Program'];
     }
 
-    public function mojeAktivityAdminUrl(string $zakladniAdminUrl = URL_ADMIN): string {
+    public function mojeAktivityAdminUrl(string $zakladniAdminUrl = URL_ADMIN): string
+    {
         // vrátí "moje-aktivity" - máme to schválně přes cestu ke skriptu, protože jeho název udává výslednou URL a nechceme mít neplatnou URL, kdyby někdo ten skrip přejmenoval.
         return $zakladniAdminUrl . '/' . basename(__DIR__ . '/../admin/scripts/modules/moje-aktivity/moje-aktivity.php', '.php');
     }
 
-    public function kdySeRegistrovalNaLetosniGc(): ?DateTimeImmutable {
+    public function kdySeRegistrovalNaLetosniGc(): ?DateTimeImmutable
+    {
         if (!$this->gcPrihlasen()) {
             return null;
         }
@@ -2011,7 +2238,7 @@ SQL;
             $hodnota                           = dbOneCol(<<<SQL
 SELECT posazen FROM platne_role_uzivatelu WHERE id_uzivatele = $0 AND id_role = $1
 SQL,
-                [$this->id(), Role::PRIHLASEN_NA_LETOSNI_GC]
+                [$this->id(), Role::PRIHLASEN_NA_LETOSNI_GC],
             );
             $this->kdySeRegistrovalNaLetosniGc = $hodnota
                 ? new DateTimeImmutable($hodnota)
