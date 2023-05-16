@@ -143,6 +143,11 @@ class DateTimeGamecon extends DateTimeCz
         return $zacatekTechnickychAktivit->setTime(0, 0, 0);
     }
 
+    public static function konecProgramu(SystemoveNastaveni $systemoveNastaveni): DateTimeGamecon
+    {
+        return self::konecGameconu($systemoveNastaveni->rocnik());
+    }
+
     public static function zacatekRegistraciUcastniku(int $rocnik = ROCNIK): DateTimeGamecon
     {
         return $rocnik === (int)ROCNIK && defined('REG_GC_OD')
