@@ -1,6 +1,5 @@
 <?php
 
-use Gamecon\Kanaly\GcMail;
 use Gamecon\Aktivita\Aktivita;
 use Gamecon\Aktivita\HromadneAkceAktivit;
 use Symfony\Component\Filesystem\Filesystem;
@@ -22,6 +21,7 @@ if (HTTPS_ONLY) {
     httpsOnly();
 }
 
+// pozor změnu CRON_KEY je nutné provést i v https://console.cron-job.org
 if (!defined('CRON_KEY') || (string)CRON_KEY === '') {
     die('Není nastaven CRON klíč');
 }
