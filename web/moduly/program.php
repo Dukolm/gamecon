@@ -1,5 +1,6 @@
 <?php
 
+use Gamecon\Aktivita\Program;
 use Gamecon\Cas\DateTimeCz;
 use Gamecon\Cas\DateTimeGamecon;
 use Gamecon\Pravo;
@@ -8,7 +9,7 @@ use Gamecon\Pravo;
 /** @var \Gamecon\XTemplate\XTemplate $t */
 /** @var Uzivatel $u */
 /** @var url $url */
-/** @var Gamecon\SystemoveNastaveni\SystemoveNastaveni $systemoveNastaveni */
+/** @var \Gamecon\SystemoveNastaveni\SystemoveNastaveni $systemoveNastaveni */
 
 $this->blackarrowStyl(true);
 
@@ -39,7 +40,7 @@ if ($url->cast(1) === 'muj') {
 
 $this->info()->nazev($title);
 
-$program = new Program($u, $nastaveni);
+$program = new Program($systemoveNastaveni, $u, $nastaveni);
 $program->zpracujPost($u);
 
 foreach ($program->cssUrls() as $cssUrl) {
@@ -49,8 +50,10 @@ $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-nahled/program-n
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-posuv/program-posuv.js');
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/_spolecne/zachovej-scroll.js');
 
-$zacatekPrvniVlnyOd       = $systemoveNastaveni->prvniVlnaKdy();
-$zacatekPrvniVlnyZaSekund = $zacatekPrvniVlnyOd->getTimestamp() - $systemoveNastaveni->ted()->getTimestamp();
+$zacatekPristiVlnyOd       = $systemoveNastaveni->pristiVlnaKdy();
+$zacatekPristiVlnyZaSekund = $zacatekPristiVlnyOd !== null
+    ? $zacatekPristiVlnyOd->getTimestamp() - $systemoveNastaveni->ted()->getTimestamp()
+    : null;
 
 $legendaText   = Stranka::zUrl('program-legenda-text')->html();
 $jeOrganizator = isset($u) && $u && $u->maPravo(Pravo::PORADANI_AKTIVIT);
@@ -142,14 +145,13 @@ $zobrazitMujProgramOdkaz = isset($u);
 
     programPosuv(document.querySelector('.programPosuv_obal2'))
 
-    <?php if ($zacatekPrvniVlnyZaSekund > 0) {
-    $zacatekPrvniVlnyZaMilisekund = $zacatekPrvniVlnyZaSekund * 1000;
-    if ($zacatekPrvniVlnyZaMilisekund > 0) { ?> /*kdyby to náhodou přeteklo za 2^32 -1 */
-    if (<?= $zacatekPrvniVlnyZaMilisekund ?> <= 2147483647) {
-        setTimeout(function () {
-            location.reload()
-        }, <?= $zacatekPrvniVlnyZaMilisekund ?>)
-    }
+    <?php if ($zacatekPristiVlnyZaSekund !== null && $zacatekPristiVlnyZaSekund > 3) { // nebudeme auto-refreshovat lidem co mačkají F5
+    $zacatekPristiVlnyZaMilisekund = $zacatekPristiVlnyZaSekund * 1000;
+    /* protože by to mohlo přetéct 2^32 -1 */
+    if ($zacatekPristiVlnyZaMilisekund <= 2147483647) { ?>
+    setTimeout(function () {
+        location.reload()
+    }, <?= $zacatekPristiVlnyZaMilisekund + 2000 /* radši s rezervou, ať slavnostně neobnovíme stránku kde ještě nic není */ ?>)
     <?php }
     } ?>
 </script>

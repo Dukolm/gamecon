@@ -206,7 +206,7 @@ class AktivitaPrezence
             return;
         }
 
-        (new GcMail)
+        GcMail::vytvorZGlobals()
             ->adresat($u->mail())
             ->predmet('Nedostavení se na aktivitu')
             ->text(hlaskaMail('nedostaveniSeNaAktivituMail', $u))
@@ -239,11 +239,11 @@ class AktivitaPrezence
         $nejnovejsiZmenyPrihlaseni = new PosledniZmenyPrihlaseni();
         foreach (self::dejDataPoslednichZmen($idsPoslednichZnamychLoguUcastniku) as $zmena) {
             $zmenaPrihlaseni = ZmenaPrihlaseni::vytvorZDatDatabaze(
-                (int)$zmena[AkcePrihlaseniLogSqlStruktura::ID_UZIVATELE],
-                (int)$zmena[AkcePrihlaseniLogSqlStruktura::ID_AKCE],
-                (int)$zmena[AkcePrihlaseniLogSqlStruktura::ID_LOG],
-                new \DateTimeImmutable($zmena[AkcePrihlaseniLogSqlStruktura::KDY]),
-                $zmena[AkcePrihlaseniLogSqlStruktura::TYP],
+                (int)$zmena[LogSql::ID_UZIVATELE],
+                (int)$zmena[LogSql::ID_AKCE],
+                (int)$zmena[LogSql::ID_LOG],
+                new \DateTimeImmutable($zmena[LogSql::KDY]),
+                $zmena[LogSql::TYP],
             );
             $nejnovejsiZmenyPrihlaseni->addPosledniZmenaPrihlaseni($zmenaPrihlaseni);
         }

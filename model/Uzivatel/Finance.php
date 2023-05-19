@@ -24,11 +24,11 @@ class Finance
 
     public const KLIC_ZRUS_NAKUP_POLOZKY = 'zrus-nakup-polozky';
 
-    private $stav       = 0;  // celkový výsledný stav uživatele na účtu
-    private $deltaPozde = 0;      // o kolik se zvýší platba při zaplacení pozdě
-    private $soucinitelCenyAKtivit;              // součinitel ceny aktivit
-    private $logovat    = true;    // ukládat seznam předmětů?
-    private ?\Cenik $cenik = null;             // instance ceníku
+    private         $stav       = 0;  // celkový výsledný stav uživatele na účtu
+    private         $deltaPozde = 0;      // o kolik se zvýší platba při zaplacení pozdě
+    private         $soucinitelCenyAKtivit;              // součinitel ceny aktivit
+    private         $logovat    = true;    // ukládat seznam předmětů?
+    private ?\Cenik $cenik      = null;             // instance ceníku
     // tabulky s přehledy
     private $prehled                        = [];   // tabulka s detaily o platbách
     private $strukturovanyPrehled           = [];
@@ -125,6 +125,11 @@ SQL,
         );
     }
 
+    public static function zaokouhli($cena): float
+    {
+        return round((float)$cena, 2);
+    }
+
     /**
      * @param \Uzivatel $u uživatel, pro kterého se finance sestavují
      * @param float $zustatek zůstatek na účtu z minulých GC
@@ -169,10 +174,11 @@ SQL,
 
         $this->logb('Celková cena', $cena, self::CELKOVA);
 
-        $this->stav = round(
+        $this->stav = self::zaokouhli(
             -$cena
             + $this->sumaPlateb()
-            + $this->zustatekZPredchozichRocniku, 2);
+            + $this->zustatekZPredchozichRocniku,
+        );
 
         $this->logb('Aktivity', $this->cenaAktivit, self::AKTIVITY);
         $this->logb('Ubytování', $this->cenaUbytovani, self::UBYTOVANI);
@@ -274,7 +280,7 @@ SQL,
     private function formatujProLog($nazev, $castka, $kategorie = null, $idPolozky = null): array
     {
         if (is_numeric($castka)) {
-            $castka = round($castka);
+            $castka = self::zaokouhli($castka);
         }
         return [
             'nazev'      => $nazev,
@@ -289,6 +295,7 @@ SQL,
      */
     private function logb($nazev, $castka, $kategorie = null, $idPolozky = null)
     {
+        $castka = self::zaokouhli($castka);
         $this->log("<b>$nazev</b>", "<b>$castka</b>", $kategorie, $idPolozky);
     }
 
@@ -419,13 +426,14 @@ SQL,
      * @param string|null $poznamka
      * @param \Uzivatel $provedl
      */
-    public function pripisSlevu($sleva, $poznamka, \Uzivatel $provedl)
+    public function pripisSlevu($sleva, $poznamka, \Uzivatel $provedl): float
     {
         $sleva = prevedNaFloat($sleva);
         dbQuery(
             'INSERT INTO slevy(id_uzivatele, castka, rok, provedl, poznamka) VALUES ($1, $2, $3, $4, $5)',
             [$this->u->id(), $sleva, ROCNIK, $provedl->id(), $poznamka ?: null],
         );
+        return $sleva;
     }
 
     /** Vrátí aktuální stav na účtu uživatele pro tento rok */
@@ -691,7 +699,7 @@ SQL,
                 $sumaPlateb += (float)$row['cena'];
                 $this->log($row['nazev'], $row['cena'], self::PLATBA);
             }
-            $this->sumyPlatebVRocich[$rok] = round($sumaPlateb, 2);
+            $this->sumyPlatebVRocich[$rok] = self::zaokouhli($sumaPlateb);
         }
         return $this->sumyPlatebVRocich[$rok];
     }

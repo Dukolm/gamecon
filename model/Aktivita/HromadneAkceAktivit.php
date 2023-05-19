@@ -12,7 +12,7 @@ use Gamecon\SystemoveNastaveni\SystemoveNastaveni;
 
 class HromadneAkceAktivit
 {
-    private const SKUPINA = 'aktivity';
+    private const SKUPINA_AKTIVITY = 'aktivity';
 
     use LogHomadnychAkciTrait;
 
@@ -30,8 +30,9 @@ class HromadneAkceAktivit
         if ($nejblizsiVlnaKdy > $ted) {
             throw new NevhodnyCasProAutomatickouHromadnouAktivaci(
                 sprintf(
-                    "Hromadná aktivace může být spuštěna nejdříve v '%s' podle nejbližší vlny.",
+                    "Hromadná aktivace může být spuštěna nejdříve v '%s' (%s) podle nejbližší vlny.",
                     $nejblizsiVlnaKdy->format(DateTimeCz::FORMAT_DB),
+                    $nejblizsiVlnaKdy->relativniVBudoucnu(),
                 )
             );
         }
@@ -43,26 +44,20 @@ class HromadneAkceAktivit
             throw new NaHromadnouAutomatickouAktivaciJePozde(
                 sprintf(
                     "Hromadná aktivace může být spuštěna nanejvýš den po platnosti.
-Platnost hromadné aktivace byla '%s', teď je '%s' a aktivaci současné vlny šlo pustit naposledy %s (v '%s')",
+Platnost současné vlny hromadné aktivace byla '%s' (%s), teď je '%s' a aktivaci současné vlny šlo pustit naposledy '%s' (%s)",
                     $nejblizsiVlnaKdy->format(DateTimeCz::FORMAT_DB),
+                    $nejblizsiVlnaKdy->relativni(),
                     $ted->format(DateTimeCz::FORMAT_DB),
-                    $naposledySloPustitKdy->relativni(),
                     $naposledySloPustitKdy->format(DateTimeCz::FORMAT_DB),
+                    $naposledySloPustitKdy->relativni(),
                 )
             );
         }
 
-        $result                      = dbQuery(
-            'UPDATE akce_seznam SET stav=$0 WHERE stav=$1 AND rok=$2',
-            [0 => StavAktivity::AKTIVOVANA, 1 => StavAktivity::PRIPRAVENA, 2 => $this->systemoveNastaveni->rocnik()],
-        );
-        $automatickyAktivovanoCelkem = (int)dbAffectedOrNumRows($result);
-
-        $this->zalogujHromadnouAkci(
-            self::SKUPINA,
-            $this->sestavNazevAkceHromadneAktivace($nejblizsiVlnaKdy),
-            $automatickyAktivovanoCelkem,
+        $automatickyAktivovanoCelkem = $this->hromadneAktivovat(
             \Uzivatel::zId(\Uzivatel::SYSTEM, true),
+            $this->sestavNazevAkceHromadneAktivace($nejblizsiVlnaKdy),
+            $this->systemoveNastaveni->rocnik(),
         );
 
         $this->automatickyAktivovanoCelkem = $automatickyAktivovanoCelkem;
@@ -77,15 +72,31 @@ Platnost hromadné aktivace byla '%s', teď je '%s' a aktivaci současné vlny �
 
     public function hromadneAktivovatRucne(\Uzivatel $aktivujici, int $rocnik = null): int
     {
-        $result                    = dbQuery(
-            'UPDATE akce_seznam SET stav=$0 WHERE stav=$1 AND rok=$2',
-            [0 => StavAktivity::AKTIVOVANA, 1 => StavAktivity::PRIPRAVENA, 2 => $rocnik],
+        $rocnik ??= $this->systemoveNastaveni->rocnik();
+        return $this->hromadneAktivovat($aktivujici, $this->nazevAkceHromadneRucniAktivace(), $rocnik);
+    }
+
+    private function hromadneAktivovat(\Uzivatel $aktivujici, string $nazevAkce, int $rocnik)
+    {
+        $zeStavu = StavAktivity::PRIPRAVENA;
+        $doStavu = StavAktivity::AKTIVOVANA;
+        dbBegin();
+        dbQuery(<<<SQL
+            INSERT INTO akce_stavy_log(id_akce, id_stav, kdy)
+            SELECT id_akce, $doStavu, NOW()
+            FROM akce_seznam WHERE stav = $zeStavu AND rok = $rocnik
+            SQL,
+        );
+        $result                    = dbQuery(<<<SQL
+            UPDATE akce_seznam SET stav = $doStavu WHERE stav = $zeStavu AND rok = $rocnik
+            SQL,
         );
         $hromadneAktivovanoAktivit = (int)dbAffectedOrNumRows($result);
+        dbCommit();
 
         $this->zalogujHromadnouAkci(
-            self::SKUPINA,
-            $this->nazevAkceHromadneRucniAktivace(),
+            self::SKUPINA_AKTIVITY,
+            $nazevAkce,
             $hromadneAktivovanoAktivit,
             $aktivujici,
         );
@@ -104,19 +115,21 @@ Platnost hromadné aktivace byla '%s', teď je '%s' a aktivaci současné vlny �
      */
     public function odemciTeamoveHromadne(\Uzivatel $odemykajici): int
     {
-        $o                       = dbQuery('SELECT id_akce, zamcel FROM akce_seznam WHERE zamcel AND zamcel_cas < NOW() - INTERVAL ' . Aktivita::HAJENI_TEAMU_HODIN . ' HOUR');
+        $zamcene                 = dbFetchAll('SELECT id_akce, zamcel FROM akce_seznam WHERE zamcel AND zamcel_cas < NOW() - INTERVAL ' . Aktivita::HAJENI_TEAMU_HODIN . ' HOUR');
         $odemcenoTymovychAktivit = 0;
-        while (list($aid, $uid) = mysqli_fetch_row($o)) {
+        foreach ($zamcene as [$aid, $uid]) {
             // uvolnění zámku je součástí odhlášení, pokud je sám -> done
             Aktivita::zId($aid)->odhlas(\Uzivatel::zId($uid), $odemykajici, 'hromadne-odemceni-teamovych');
             $odemcenoTymovychAktivit++;
         }
-        $this->zalogujHromadnouAkci(
-            self::SKUPINA,
-            $this->nazevAkceHromadnehoOdemceniTeamovych(),
-            $odemcenoTymovychAktivit,
-            \Uzivatel::zId(\Uzivatel::SYSTEM, true),
-        );
+        if ($odemcenoTymovychAktivit > 0) {
+            $this->zalogujHromadnouAkci(
+                self::SKUPINA_AKTIVITY,
+                $this->nazevAkceHromadnehoOdemceniTeamovych(),
+                $odemcenoTymovychAktivit,
+                \Uzivatel::zId(\Uzivatel::SYSTEM, true),
+            );
+        }
 
         return $odemcenoTymovychAktivit;
     }
@@ -131,7 +144,7 @@ Platnost hromadné aktivace byla '%s', teď je '%s' a aktivaci současné vlny �
         $vlnaKdy   ??= $this->systemoveNastaveni->nejblizsiVlnaKdy();
         $nazevAkce = $this->sestavNazevAkceHromadneAktivace($vlnaKdy);
 
-        return $this->posledniHromadnaAkceKdy(self::SKUPINA, $nazevAkce);
+        return $this->posledniHromadnaAkceKdy(self::SKUPINA_AKTIVITY, $nazevAkce);
     }
 
     private function sestavNazevAkceHromadneAktivace(\DateTimeInterface $vlnaKdy): string

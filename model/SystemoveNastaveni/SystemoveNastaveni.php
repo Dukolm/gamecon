@@ -1,7 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Gamecon\SystemoveNastaveni;
 
+use Composer\Autoload\ClassLoader;
 use Gamecon\Cas\DateTimeCz;
 use Gamecon\Cas\DateTimeGamecon;
 use Gamecon\Cas\DateTimeImmutableStrict;
@@ -24,6 +27,7 @@ class SystemoveNastaveni implements ZdrojRocniku, ZdrojVlnAktivit, ZdrojTed
         ?bool                   $jsmeNaBete = null,
         ?bool                   $jsmeNaLocale = null,
         ?bool                   $databazoveNastaveni = null,
+        ?string                 $projectRootDir = null,
     ): self
     {
         $jsmeNaBete ??= in_array(
@@ -35,7 +39,10 @@ class SystemoveNastaveni implements ZdrojRocniku, ZdrojVlnAktivit, ZdrojTed
             $ted,
             $jsmeNaBete ?? parse_url(URL_WEBU, PHP_URL_HOST) === 'beta.gamecon.cz',
             $jsmeNaLocale ?? parse_url(URL_WEBU, PHP_URL_HOST) === 'localhost',
-            $databazoveNastaveni ?? DatabazoveNastaveni::vytvorZGlobals()
+            $databazoveNastaveni ?? DatabazoveNastaveni::vytvorZGlobals(),
+            $projectRootDir
+            ?? try_constant('PROJECT_ROOT_DIR')
+            ?? dirname((new \ReflectionClass(ClassLoader::class))->getFileName()) . '/../..'
         );
     }
 
@@ -101,6 +108,7 @@ class SystemoveNastaveni implements ZdrojRocniku, ZdrojVlnAktivit, ZdrojTed
         private readonly bool                    $jsmeNaBete,
         private readonly bool                    $jsmeNaLocale,
         private readonly DatabazoveNastaveni     $databazoveNastaveni,
+        private readonly string                  $rootAdresarProjektu,
     )
     {
         if ($jsmeNaLocale && $jsmeNaBete) {
@@ -129,7 +137,10 @@ SQL,
             return;
         } catch (\DbException $dbException) {
             if (in_array($dbException->getCode(), [1146 /* table does not exist */, 1054 /* new column does not exist */])) {
-                return; // tabulka či sloupec musí vzniknout SQL migrací
+                if ((new SqlMigrace($this))->nejakeMigraceKeSpusteni()) {
+                    return; // tabulka či sloupec musí vzniknout SQL migrací
+                }
+                // else například jsme si na lokál stáhli příliš novou databázi
             }
             throw $dbException;
         }
@@ -190,7 +201,7 @@ SQL,
                     : $this->spocitejBonusZaVedeniAktivity('BONUS_ZA_12H_AZ_13H_AKTIVITU'),
                 'PRISTI_VLNA_AKTIVIT_KDY'      => defined('PRISTI_VLNA_AKTIVIT_KDY')
                     ? PRISTI_VLNA_AKTIVIT_KDY
-                    : self::pristiVlnaKdy(),
+                    : self::pristiVlnaKdy()?->formatDb(),
             ];
         }
         return $this->odvozeneHodnoty;
@@ -203,11 +214,16 @@ SQL,
             'integer', 'int' => (int)$hodnota,
             'number', 'float' => (float)$hodnota,
             // když to změníš, rozbiješ JS systemove-nastaveni.js
-            'date' => (new DateTimeCz($hodnota))->formatDatumDb(),
+            'date' => $this->vytvorDateTime($hodnota)->formatDatumDb(),
             // když to změníš, rozbiješ JS systemove-nastaveni.js
-            'datetime' => (new DateTimeCz($hodnota))->formatDb(),
+            'datetime' => $this->vytvorDateTime($hodnota)->formatDb(),
             default => (string)$hodnota,
         };
+    }
+
+    private function vytvorDateTime(string $hodnota): DateTimeCz
+    {
+        return new DateTimeCz(preg_replace('~\s~', '', $hodnota));
     }
 
     public function ulozZmenuHodnoty($hodnota, string $klic, \Uzivatel $editujici): int
@@ -278,7 +294,7 @@ UPDATE systemove_nastaveni
 SET vlastni = $1
 WHERE klic = $2
 SQL,
-            [$vlastni ? 1 : 0 /* Aby nás nepotkalo "Incorrect integer value: '' for column aktivni" */, $klic],
+            [$vlastni ? 1 : 0 /* Aby nás nepotkalo "Incorrect integer value: '' for column vlastni" */, $klic],
         );
         dbQuery(<<<SQL
 INSERT INTO systemove_nastaveni_log(id_uzivatele, id_nastaveni, vlastni)
@@ -305,6 +321,7 @@ SQL,
                 'datetime' => $hodnota
                     ? DateTimeCz::createFromFormat('j. n. Y H:i:s', $hodnota)->formatDb()
                     : $hodnota,
+                'bool', 'boolean' => (int)filter_var($hodnota, FILTER_VALIDATE_BOOLEAN),
                 default => $hodnota,
             };
         } catch (InvalidDateTimeFormat $invalidDateTimeFormat) {
@@ -519,6 +536,12 @@ SQL;
                     : DateTimeGamecon::spocitejPrvniHromadneOdhlasovani($this->rocnik())
                         ->formatDatumDb(),
                 Klic::TEXT_PRO_SPAROVANI_ODCHOZI_PLATBY               => 'vraceni zustatku GC ID:',
+                Klic::HROMADNE_ODHLASOVANI_1                          => DateTimeGamecon::spocitejPrvniHromadneOdhlasovani($this->rocnik())
+                    ->formatDb(),
+                Klic::HROMADNE_ODHLASOVANI_2                          => DateTimeGamecon::spocitejDruheHromadneOdhlasovani($this->rocnik())
+                    ->formatDb(),
+                Klic::HROMADNE_ODHLASOVANI_3                          => DateTimeGamecon::spocitejTretiHromadneOdhlasovani($this->rocnik())
+                    ->formatDb(),
             ];
         }
         return $this->vychoziHodnoty;
@@ -703,7 +726,7 @@ SQL;
         return DateTimeGamecon::tretiVlnaKdy($this->rocnik());
     }
 
-    public function registraceAktivitOd(): DateTimeGamecon
+    public function gcBeziOd(): DateTimeGamecon
     {
         return DateTimeGamecon::createFromMysql(defined('GC_BEZI_OD')
             ? GC_BEZI_OD
@@ -711,7 +734,7 @@ SQL;
         );
     }
 
-    public function registraceAktivitDo(): DateTimeGamecon
+    public function gcBeziDo(): DateTimeGamecon
     {
         return DateTimeGamecon::createFromMysql(defined('GC_BEZI_DO')
             ? GC_BEZI_DO
@@ -792,7 +815,7 @@ SQL;
 
     public function prihlasovaciUdajeOstreDatabaze(): array
     {
-        $souborNastaveniOstra = PROJECT_ROOT_DIR . '/../ostra/nastaveni/nastaveni-produkce.php';
+        $souborNastaveniOstra = $this->rootAdresarProjektu . '/../ostra/nastaveni/nastaveni-produkce.php';
         if (!is_readable($souborNastaveniOstra)) {
             throw new \RuntimeException('Nelze přečíst soubor s nastavením ostré ' . $souborNastaveniOstra);
         }
@@ -813,5 +836,44 @@ SQL;
             $nastaveniOstre[$klic] = $matches['hodnota'] ?? null;
         }
         return $nastaveniOstre;
+    }
+
+    public function poslatMailZeBylOdhlasenAMelUbytovani(): bool
+    {
+        return (bool)(defined('POSILAT_MAIL_O_ODHLASENI_A_UVOLNENEM_UBYTOVANI')
+            ? POSILAT_MAIL_O_ODHLASENI_A_UVOLNENEM_UBYTOVANI
+            : $this->dejHodnotu('POSILAT_MAIL_O_ODHLASENI_A_UVOLNENEM_UBYTOVANI'));
+    }
+
+    public function prihlasovaciUdajeSoucasneDatabaze(): array
+    {
+        return [
+            'DBM_USER' => try_constant('DBM_USER'),
+            'DBM_PASS' => try_constant('DBM_PASS'),
+            'DB_USER'  => try_constant('DB_USER'),
+            'DB_PASS'  => try_constant('DB_PASS'),
+            'DB_NAME'  => try_constant('DB_NAME'),
+            'DB_SERV'  => try_constant('DB_SERV'),
+            'DB_PORT'  => try_constant('DB_PORT'),
+        ];
+    }
+
+    public function kontaktniEmailGc(): string
+    {
+        return 'info@gamecon.cz';
+    }
+
+    public function prefixPodleProstredi(): string
+    {
+        if ($this->jsmeNaOstre()) {
+            return '';
+        }
+        if ($this->jsmeNaBete()) {
+            return 'β';
+        }
+        if ($this->jsmeNaLocale()) {
+            return 'άλφα';
+        }
+        return 'δ'; // gamu přeskočíme, je nevýrazná
     }
 }

@@ -47,14 +47,30 @@ class Uzivatel extends DbObject
     private ?array $organizovaneAktivityIds = null;
     private ?array $historiePrihlaseni      = null;
 
-    public static function povinneUdajeProRegistraci(): array
+    public static function povinneUdajeProRegistraci(bool $vcetneProUbytovani = false): array
     {
-        return [
+        $povinneUdaje = [
             Sql::JMENO_UZIVATELE    => 'Jméno',
             Sql::PRIJMENI_UZIVATELE => 'Příjmení',
             Sql::TELEFON_UZIVATELE  => 'Telefon',
             Sql::EMAIL1_UZIVATELE   => 'E-mail',
+            Sql::LOGIN_UZIVATELE    => 'Přezdívka',
         ];
+        if ($vcetneProUbytovani) {
+            $povinneUdaje = [
+                ...$povinneUdaje,
+                ...[
+                    Sql::DATUM_NAROZENI         => 'Datum narození',
+                    Sql::ULICE_A_CP_UZIVATELE   => 'Ulice a číslo popisné',
+                    Sql::MESTO_UZIVATELE        => 'Město',
+                    Sql::PSC_UZIVATELE          => 'PSČ',
+                    Sql::TYP_DOKLADU_TOTOZNOSTI => 'Typ dokladu totožnosti',
+                    Sql::OP                     => 'Číslo dokladu totožnosti',
+                    Sql::STATNI_OBCANSTVI       => 'Státní občanství',
+                ],
+            ];
+        }
+        return $povinneUdaje;
     }
 
     /**
@@ -82,7 +98,7 @@ JOIN platne_role_uzivatelu ON uzivatele_hodnoty.id_uzivatele = platne_role_uziva
 JOIN prava_role ON platne_role_uzivatelu.id_role = prava_role.id_role
 WHERE prava_role.id_prava = $1
 SQL
-            , [\Gamecon\Pravo::PORADANI_AKTIVIT],
+            , [Pravo::PORADANI_AKTIVIT],
         );
         return static::zIds($ids);
     }
@@ -364,7 +380,9 @@ SQL
             if ($zaznamnik) {
                 $zaznamnik->uchovejZEmailu($mailMelUbytovani);
             } else {
-                $mailMelUbytovani->odeslat();
+                if ($this->systemoveNastaveni->poslatMailZeBylOdhlasenAMelUbytovani()) {
+                    $mailMelUbytovani->odeslat();
+                }
             }
         }
         if ($odeslatMailPokudSeNeodhlasilSam && $this->id() !== $odhlasujici->id()) {
@@ -383,7 +401,7 @@ SQL
             ? ' se odhlásil'
             : 'byl odhlášen';
 
-        return (new GcMail())
+        return (new GcMail($this->systemoveNastaveni))
             ->adresat('info@gamecon.cz')
             ->predmet("Uživatel '{$this->jmenoNick()}' ({$this->id()}) $odhlasen ale platil")
             ->text(
@@ -404,7 +422,7 @@ SQL
             ? ' se odhlásil'
             : 'byl odhlášen';
 
-        return (new GcMail())
+        return (new GcMail($this->systemoveNastaveni))
             ->adresat('info@gamecon.cz')
             ->predmet("Uživatel $odhlasen a měl ubytování")
             ->text(
@@ -431,7 +449,7 @@ SQL
         set_time_limit(30); // pro jistotu
         $a = $this->koncovkaDlePohlavi('a');
 
-        return (new GcMail())
+        return (new GcMail($this->systemoveNastaveni))
             ->adresat($this->mail())
             ->predmet("Byl{$a} jsi odhlášen{$a} z Gameconu {$rok}")
             ->text(<<<TEXT
@@ -551,7 +569,7 @@ SQL,
     /**
      * @return int[] roky, kdy byl přihlášen na GC
      */
-    public function historiePrihlaseni()
+    public function historiePrihlaseni(): array
     {
         if (!isset($this->historiePrihlaseni)) {
             $ucast                    = Role::TYP_UCAST;
@@ -650,11 +668,9 @@ SQL,
     /**
      * @return string[] povinné údaje které chybí
      */
-    public function chybejiciUdaje(array $povinneUdaje)
+    public function chybejiciUdaje(array $povinneUdaje): array
     {
-        $validator = function (string $sloupec) {
-            return empty($this->r[$sloupec]);
-        };
+        $validator = fn(string $sloupec) => (trim((string)$this->r[$sloupec] ?? '')) === '';
         return array_filter($povinneUdaje, $validator, ARRAY_FILTER_USE_KEY);
     }
 
@@ -745,6 +761,11 @@ SQL,
     public function maPravoNaZmenuHistorieAktivit(): bool
     {
         return $this->maPravo(Pravo::ZMENA_HISTORIE_AKTIVIT);
+    }
+
+    public function maPravoNaPrihlasovaniNaDosudNeotevrene(): bool
+    {
+        return $this->maPravo(Pravo::PRIHLASOVANI_NA_DOSUD_NEOTEVRENE);
     }
 
     public function jeBrigadnik(): bool
@@ -960,16 +981,18 @@ SQL,
     }
 
     /** Odhlásí aktuálně přihlášeného uživatele, pokud není přihlášen, nic
-     * @param bool $back rovnou otočit na referrer?
+     * @param bool $naUvodniStranku
      */
-    public function odhlas($back = false)
+    public function odhlas($naUvodniStranku = true)
     {
+        $a = $this->koncovkaDlePohlavi();
         $this->odhlasProTed();
         if (isset($_COOKIE['gcTrvalePrihlaseni'])) {
             setcookie('gcTrvalePrihlaseni', '', 0, '/');
         }
-        if ($back) {
-            back();
+        oznameni("Byl$a jsi odhlášen$a", false);
+        if ($naUvodniStranku) {
+            back(URL_WEBU);
         }
     }
 
@@ -1291,10 +1314,10 @@ SQL,
 
             $u2 = Uzivatel::zNicku($login) ?? Uzivatel::zMailu($login);
             if ($u2 && !$u) {
-                return 'přezdívka už je zabraná. Pokud je tvoje, přihlaš se nebo si resetuj heslo';
+                return 'přezdívka už je zabraná; pokud je tvoje, přihlaš se nebo si resetuj heslo';
             }
             if ($u2 && $u && $u2->id() != $u->id()) {
-                return 'přezdívka už je zabraná. Vyber si prosím jinou';
+                return 'přezdívka už je zabraná, vyber si prosím jinou';
             }
             return '';
         };
@@ -1367,6 +1390,10 @@ SQL,
             throw new Exception('Data obsahují nepovolené hodnoty: ' . implode(',', $navic));
         }
 
+        $povinneUdaje = self::povinneUdajeProRegistraci(
+            $u?->shop()->ubytovani()->maObjednaneUbytovani() ?? false,
+        );
+
         foreach ($validace as $klic => $validator) {
             $hodnota = $dbTab[$klic] ?? null;
 
@@ -1376,7 +1403,7 @@ SQL,
             $hodnota = trim((string)$hodnota);
             if ($hodnota === '') {
                 $povinne = in_array($klic, ['heslo', 'heslo_kontrola'])
-                    || array_key_exists($klic, self::povinneUdajeProRegistraci());
+                    || array_key_exists($klic, $povinneUdaje);
                 if (!$povinne) {
                     continue;
                 }
@@ -1465,7 +1492,11 @@ SQL,
      * @todo možno evidovat, že uživatel byl regnut na místě
      * @todo poslat mail s něčím jiným jak std hláškou
      */
-    public static function rychloreg($tab, $opt = [])
+    public static function rychloreg(
+        SystemoveNastaveni $systemoveNastaveni,
+        array              $tab,
+        array              $opt = [],
+    )
     {
         if (!isset($tab['login_uzivatele']) || !isset($tab['email1_uzivatele'])) {
             throw new Exception('špatný formát $tab (je to pole?)');
@@ -1492,7 +1523,10 @@ SQL,
         if ($opt['informovat']) {
             $tab['id_uzivatele'] = $uid;
             $u                   = new Uzivatel($tab); //pozor, spekulativní, nekompletní! využito kvůli std rozhraní hlaskaMail
-            $mail                = new GcMail(hlaskaMail('rychloregMail', $u, $tab['email1_uzivatele'], $rand));
+            $mail                = new GcMail(
+                $systemoveNastaveni,
+                hlaskaMail('rychloregMail', $u, $tab['email1_uzivatele'], $rand)
+            );
             $mail->adresat($tab['email1_uzivatele']);
             $mail->predmet('Registrace na GameCon.cz');
             if (!$mail->odeslat()) {
@@ -1646,7 +1680,7 @@ SQL,
      * @param DateTimeCz $datum
      * @return ?int
      */
-    public function vekKDatu(DateTimeCz $datum): ?int
+    public function vekKDatu(DateTimeInterface $datum): ?int
     {
         if ($this->r['datum_narozeni'] == '0000-00-00') {
             return null;
@@ -2047,7 +2081,7 @@ SQL;
             if ($this->maOverenePotvrzeniProtiCoviduProRok($rok, true)) {
                 $x->assign(
                     'datumOvereniPotvrzeniProtiCovid',
-                    (new DateTimeCz($this->potvrzeniProtiCoviduOverenoKdy()->format(DATE_ATOM)))->rozdilDne(new DateTimeImmutable()),
+                    (new DateTimeCz($this->potvrzeniProtiCoviduOverenoKdy()->format(DATE_ATOM)))->rozdilDni(new DateTimeImmutable()),
                 );
                 $x->parse('covid.nahrano.overeno');
             } else {

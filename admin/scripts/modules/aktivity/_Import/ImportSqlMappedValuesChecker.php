@@ -111,7 +111,7 @@ class ImportSqlMappedValuesChecker
 
         $nonTeamCapacityResult = $this->checkNonTeamCapacity(
             (bool)$sqlMappedValues[ActivitiesImportSqlColumn::TEAMOVA],
-            TypAktivity::jeInterni($sqlMappedValues[ActivitiesImportSqlColumn::TYP]),
+            TypAktivity::jeInterniDleId($sqlMappedValues[ActivitiesImportSqlColumn::TYP]),
             $sqlMappedValues[ActivitiesImportSqlColumn::KAPACITA],
             $sqlMappedValues[ActivitiesImportSqlColumn::KAPACITA_M],
             $sqlMappedValues[ActivitiesImportSqlColumn::KAPACITA_F],
@@ -512,7 +512,7 @@ SQL,
                 0 => $idLokace,
                 1 => $konec->formatDb(),
                 2 => $zacatek->formatDb(),
-                3 => $soucasnyTypAktivity::typyKterymNevadiSdileniMistnostiSJinymiTypy(),
+                3 => $soucasnyTypAktivity::typyKterymNevadiSdileniMistnostiSZadnymiTypy(),
                 4 => $soucasnyTypAktivity->nevadiMuSdileniMistnostiSeStejnymTypem()
                     ? $soucasnyTypAktivity->id()
                     : null,
