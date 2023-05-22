@@ -11,7 +11,7 @@ use Gamecon\Web\Info;
 use Gamecon\SystemoveNastaveni\SystemoveNastaveni;
 
 $info  = new Info($systemoveNastaveni);
-$login = new Login($info);
+$login = new Login($info, $systemoveNastaveni);
 
 // načtení menu
 $menuObject = new AdminMenu(__DIR__ . '/scripts/modules/');
