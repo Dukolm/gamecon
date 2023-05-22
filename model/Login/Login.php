@@ -11,17 +11,16 @@ class Login
     public const PASSWORD_INPUT_NAME = 'hesloNAdm';
 
     public function __construct(
-        private Info $info,
+        private readonly Info $info,
     )
     {
-        $this->info = clone $info;
         $this->info->nazev('Login', 'Administrace');
     }
 
-    public function dejHtmlLogin(): string
+    public function htmlLogin(): string
     {
 
-        $loginTemplate = $this->dejLoginTemplate();
+        $loginTemplate = $this->loginTemplate();
         $loginTemplate->assign('headerPageInfo', $this->info->html());
 
         $chyba = \Chyba::vyzvedniChybu();
@@ -34,7 +33,7 @@ class Login
         return $loginTemplate->text('login');
     }
 
-    private function dejLoginTemplate(): XTemplate
+    private function loginTemplate(): XTemplate
     {
         $loginTemplate = new XTemplate(__DIR__ . '/templates/login.xtpl');
 
