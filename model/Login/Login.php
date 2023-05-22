@@ -30,6 +30,10 @@ class Login
             $loginTemplate->parse('login.chyba');
         }
 
+        if ($this->systemoveNastaveni->jsmeNaBete()) {
+            $loginTemplate->parse('login.jsmeNaBete');
+        }
+
         $loginTemplate->parse('login');
         return $loginTemplate->text('login');
     }
@@ -42,7 +46,6 @@ class Login
             'base'              => URL_ADMIN . '/',
             'loginInputName'    => self::LOGIN_INPUT_NAME,
             'passwordInputName' => self::PASSWORD_INPUT_NAME,
-            'jsmeNaBete'        => $this->systemoveNastaveni->jsmeNaBete(),
         ]);
 
         $this->pridejLokalniAssety($loginTemplate);
