@@ -37,6 +37,7 @@ class Program
     private            $u              = null; // aktuální uživatel v objektu
     private            $posledniVydana = null;
     private            $dbPosledni     = null;
+    private array      $tagy           = [];
     private            $aktFronta      = [];
     private ?\Iterator $program        = null; // iterátor aktivit seřazených pro použití v programu
     private            $nastaveni      = [
@@ -348,8 +349,10 @@ class Program
         if (count($classes) === 0) {
             $classes[] = 'otevrene';
         }
-        $classes[] = 'aktivita';
-        $classes   = $classes ? ' class="' . implode(' ', $classes) . '"' : '';
+        $classes[]   = 'aktivita';
+        $classesHtml = $classes ? ' class="' . implode(' ', $classes) . '"' : '';
+
+        $stitkyHtml = implode('-', array_map('htmlentities', $aktivitaObjekt->tagy()));
 
         // název a url aktivity
         echo <<<HTML
@@ -357,7 +360,7 @@ class Program
     <div class="placeholder-pro-roztazeni-radku" style="display: none">
         <!--jenom malý hack aby se název linie dobře zobrazoval i na mobilu když všechny aktivity skryjeme javascriptovým filtrem-->
     </div>
-    <div {$classes}>
+    <div {$classesHtml} data-stitky="{$stitkyHtml}">
         <a href="{$aktivitaObjekt->url()}" target="_blank" class="programNahled_odkaz" data-program-nahled-id="{$aktivitaObjekt->id()}" title="{$aktivitaObjekt->nazev()}">
             {$aktivitaObjekt->nazev()}
         </a>
@@ -524,7 +527,7 @@ HTML;
                 throw new \LogicException('nepodporovaný typ shlukování aktivit ' . $this->grpf);
         }
 
-        $a = [
+        $a          = [
             'grp' => $grp,
             'zac' => $zac,
             'kon' => $kon,
@@ -532,6 +535,7 @@ HTML;
             'del' => $kon - $zac,
             'obj' => $aktivita,
         ];
+        $this->tagy = [...$this->tagy, ...$aktivita->tagy()];
         $iterator->next();
 
         // u programu dne přeskočit aktivity, které nejsou daný den
@@ -601,5 +605,10 @@ HTML;
         for ($cas = PROGRAM_ZACATEK; $cas < PROGRAM_KONEC; $cas++)
             $bunky .= '<td></td>';
         return "<tr><td rowspan=\"1\"><div class=\"program_nazevLinie\">$nazev</div></td>$bunky</tr>";
+    }
+
+    public function tagyAktivit(): array
+    {
+        return array_unique($this->tagy);
     }
 }

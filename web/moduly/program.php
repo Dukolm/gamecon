@@ -46,10 +46,16 @@ $program->zpracujPost($u);
 foreach ($program->cssUrls() as $cssUrl) {
     $this->pridejCssUrl($cssUrl);
 }
+$this->pridejCssSoubor(__DIR__ . '/../../web/soubory/blackarrow/jquery-multiselect/jquery.multiselect.gamecon.css');
+$this->pridejCssSoubor(__DIR__ . '/../soubory/blackarrow/jquery-multiselect/jquery.multiselect-2.4.16.css');
+
+$this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/jquery-multiselect/jquery-3.4.1.min.js');
+$this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/jquery-multiselect/jquery.multiselect-2.4.16.gamecon.js');
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-nahled/program-nahled.js');
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program-posuv/program-posuv.js');
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/_spolecne/zachovej-scroll.js');
 $this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program/filtr-programu.js');
+$this->pridejJsSoubor(__DIR__ . '/../soubory/blackarrow/program/vyber-stitku.js');
 
 $zacatekPristiVlnyOd       = $systemoveNastaveni->pristiVlnaKdy();
 $zacatekPristiVlnyZaSekund = $zacatekPristiVlnyOd !== null
@@ -69,6 +75,11 @@ $aktivni = function ($urlOdkazu) use ($url, $alternativniUrl) {
 
     return 'href="' . $urlOdkazu . '" class="' . $cssTridy . '"';
 };
+
+ob_start();
+/** hack abychom měli nahrané tagy, @see \Gamecon\Aktivita\Program::tagyAktivit */
+$program->tisk();
+$programTisk = ob_get_clean();
 
 $zobrazitMujProgramOdkaz = isset($u);
 
@@ -132,13 +143,27 @@ $zobrazitMujProgramOdkaz = isset($u);
                 </span>
             <?php } ?>
         </div>
+
+        <div class="program_legenda_stitky">
+            <select name="tag[]" multiple id="vyberStitkuProgram">
+                <?php
+                $tagy = $program->tagyAktivit();
+                sort($tagy);
+                foreach ($tagy as $tag) { ?>
+                    <option class="program_legenda_tag" value="<?= $tag ?>"><?= $tag ?></option>
+                <?php } ?>
+            </select>
+            <script type="text/javascript">
+                document.dispatchEvent(new Event('stitkyNahrane'))
+            </script>
+        </div>
     </div>
 
 
     <div class="programNahled_obalProgramu">
         <div class="programPosuv_obal2">
             <div class="programPosuv_obal">
-                <?php $program->tisk(); ?>
+                <?= $programTisk; ?>
             </div>
         </div>
     </div>
